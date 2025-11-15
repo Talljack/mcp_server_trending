@@ -1,0 +1,49 @@
+"""Base models for all platform data structures."""
+
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+
+@dataclass
+class BaseModel:
+    """Base model for all data structures."""
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert model to dictionary."""
+        result = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, BaseModel):
+                result[key] = value.to_dict()
+            elif isinstance(value, list) and value and isinstance(value[0], BaseModel):
+                result[key] = [item.to_dict() for item in value]
+            else:
+                result[key] = value
+        return result
+
+
+@dataclass
+class TrendingResponse(BaseModel):
+    """Standard response format for all trending data."""
+
+    success: bool
+    platform: str
+    data_type: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    cache_hit: bool = False
+    data: List[Any] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    error: Optional[str] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary with proper datetime formatting."""
+        result = super().to_dict()
+        # Ensure data items are properly serialized
+        if self.data:
+            result['data'] = [
+                item.to_dict() if isinstance(item, BaseModel) else item
+                for item in self.data
+            ]
+        return result
