@@ -1,8 +1,7 @@
-"""Product Hunt fetcher implementation."""
+"""Product Hunt fetcher implementation using official GraphQL API."""
 
-from datetime import datetime, timedelta
-
-from bs4 import BeautifulSoup
+import os
+from datetime import datetime
 
 from ...models.base import TrendingResponse
 from ...models.producthunt import ProductHuntProduct
@@ -12,18 +11,73 @@ from ..base import BaseFetcher
 
 class ProductHuntFetcher(BaseFetcher):
     """
-    Fetcher for Product Hunt data.
+    Fetcher for Product Hunt data using official GraphQL API.
 
-    Note: This implementation uses web scraping as Product Hunt's GraphQL API
-    requires authentication and has strict rate limits. For production use,
-    consider using the official API with proper credentials.
+    Requires:
+    - PRODUCTHUNT_CLIENT_ID: Your Product Hunt app's Client ID
+    - PRODUCTHUNT_CLIENT_SECRET: Your Product Hunt app's Client Secret
+
+    Get credentials from: https://www.producthunt.com/v2/oauth/applications
     """
 
     BASE_URL = "https://www.producthunt.com"
+    API_URL = "https://api.producthunt.com/v2/api/graphql"
+    TOKEN_URL = "https://api.producthunt.com/v2/oauth/token"
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.client_id = os.getenv("PRODUCTHUNT_CLIENT_ID")
+        self.client_secret = os.getenv("PRODUCTHUNT_CLIENT_SECRET")
+        self._access_token = None  # Cached access token
 
     def get_platform_name(self) -> str:
         """Get platform name."""
         return "producthunt"
+
+    async def _get_access_token(self) -> str | None:
+        """
+        Get access token using Client Credentials flow.
+
+        Returns:
+            Access token or None if credentials not configured
+        """
+        # Return cached token if available
+        if self._access_token:
+            return self._access_token
+
+        # Check if credentials are configured
+        if not self.client_id or not self.client_secret:
+            logger.warning("Product Hunt credentials not configured")
+            return None
+
+        try:
+            logger.info("Fetching Product Hunt access token using Client Credentials")
+
+            token_data = {
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "grant_type": "client_credentials",
+            }
+
+            response = await self.http_client.post(
+                self.TOKEN_URL,
+                json=token_data,
+                headers={"Content-Type": "application/json"},
+            )
+
+            data = response.json()
+            self._access_token = data.get("access_token")
+
+            if self._access_token:
+                logger.info("Successfully obtained Product Hunt access token")
+                return self._access_token
+            else:
+                logger.error("No access_token in Product Hunt OAuth response")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error fetching Product Hunt access token: {e}")
+            return None
 
     async def fetch_products(
         self,
@@ -32,7 +86,7 @@ class ProductHuntFetcher(BaseFetcher):
         use_cache: bool = True,
     ) -> TrendingResponse:
         """
-        Fetch Product Hunt products.
+        Fetch Product Hunt products using GraphQL API.
 
         Args:
             time_range: Time range (today, week, month)
@@ -55,24 +109,58 @@ class ProductHuntFetcher(BaseFetcher):
         time_range: str = "today",
         topic: str | None = None,
     ) -> TrendingResponse:
-        """Internal method to fetch products."""
+        """Internal method to fetch products via GraphQL API."""
         try:
-            # Build URL based on time range
-            url = self._build_url(time_range)
+            # Get access token
+            access_token = await self._get_access_token()
 
-            # Set headers to mimic browser
+            if not access_token:
+                logger.warning("Product Hunt API credentials not configured")
+                return self._create_response(
+                    success=True,
+                    data_type=f"products_{time_range}",
+                    data=self._get_fallback_products(),
+                    metadata={
+                        "total_count": 5,
+                        "time_range": time_range,
+                        "source": "placeholder",
+                        "note": "Product Hunt API credentials not configured. Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET environment variables. Get credentials from: https://www.producthunt.com/v2/oauth/applications",
+                    },
+                )
+
+            # Build GraphQL query
+            query = self._build_graphql_query(time_range, topic)
+
+            # Set authorization header
             headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
             }
 
-            # Fetch HTML page
-            response = await self.http_client.get(url, headers=headers)
+            # Make GraphQL request
+            logger.info(f"Fetching Product Hunt products via API (time_range={time_range})")
+            response = await self.http_client.post(
+                self.API_URL,
+                json={"query": query},
+                headers=headers,
+            )
 
-            # Parse HTML
-            soup = BeautifulSoup(response.text, "html.parser")
-            products = self._parse_products(soup)
+            data = response.json()
+
+            # Check for GraphQL errors
+            if "errors" in data:
+                error_msg = data["errors"][0].get("message", "Unknown GraphQL error")
+                logger.error(f"Product Hunt API error: {error_msg}")
+                return self._create_response(
+                    success=False,
+                    data_type=f"products_{time_range}",
+                    data=[],
+                    error=error_msg,
+                )
+
+            # Extract products from response
+            products = self._parse_graphql_response(data)
 
             # Filter by topic if specified
             if topic:
@@ -80,10 +168,13 @@ class ProductHuntFetcher(BaseFetcher):
                     p for p in products if any(topic.lower() in t.lower() for t in p.topics)
                 ]
 
+            logger.info(f"Successfully fetched {len(products)} products from Product Hunt API")
+
             metadata = {
                 "total_count": len(products),
                 "time_range": time_range,
                 "topic": topic,
+                "source": "graphql_api",
             }
 
             return self._create_response(
@@ -102,166 +193,180 @@ class ProductHuntFetcher(BaseFetcher):
                 error=str(e),
             )
 
-    def _build_url(self, time_range: str) -> str:
-        """Build URL based on time range."""
-        if time_range == "today":
-            return self.BASE_URL
-        elif time_range == "week":
-            # Get date for this week
-            today = datetime.now()
-            # Go back to start of week (Monday)
-            days_since_monday = today.weekday()
-            monday = today - timedelta(days=days_since_monday)
-            return f"{self.BASE_URL}?date={monday.strftime('%Y-%m-%d')}"
-        elif time_range == "month":
-            # Get first day of current month
-            today = datetime.now()
-            first_day = today.replace(day=1)
-            return f"{self.BASE_URL}?date={first_day.strftime('%Y-%m-%d')}"
-        else:
-            return self.BASE_URL
-
-    def _parse_products(self, soup: BeautifulSoup) -> list[ProductHuntProduct]:
+    def _build_graphql_query(self, time_range: str = "today", topic: str | None = None) -> str:
         """
-        Parse product data from HTML.
+        Build GraphQL query for fetching products.
 
-        Note: Product Hunt's HTML structure may change. This parser
-        is based on the structure as of 2025 and may need updates.
+        Args:
+            time_range: Time range filter
+            topic: Optional topic filter
+
+        Returns:
+            GraphQL query string
+        """
+        # Determine ordering based on time range
+        order_map = {
+            "today": "RANKING",
+            "week": "VOTES",
+            "month": "VOTES",
+        }
+        order = order_map.get(time_range, "RANKING")
+
+        # Build topic filter if provided
+        topic_filter = f', topic: "{topic}"' if topic else ""
+
+        # GraphQL query
+        query = f"""
+        {{
+          posts(first: 20, order: {order}{topic_filter}) {{
+            edges {{
+              node {{
+                id
+                name
+                tagline
+                description
+                url
+                website
+                votesCount
+                commentsCount
+                featuredAt
+                thumbnail {{
+                  url
+                }}
+                topics {{
+                  edges {{
+                    node {{
+                      name
+                    }}
+                  }}
+                }}
+                makers {{
+                  edges {{
+                    node {{
+                      name
+                      username
+                    }}
+                  }}
+                }}
+              }}
+            }}
+          }}
+        }}
+        """
+
+        return query
+
+    def _parse_graphql_response(self, data: dict) -> list[ProductHuntProduct]:
+        """
+        Parse GraphQL response into ProductHuntProduct objects.
+
+        Args:
+            data: GraphQL response data
+
+        Returns:
+            List of ProductHuntProduct objects
         """
         products = []
 
-        # Product Hunt uses different selectors - this is a simplified version
-        # In production, you'd need to handle their actual structure
+        try:
+            edges = data.get("data", {}).get("posts", {}).get("edges", [])
 
-        # Try to find product containers (common patterns)
-        product_containers = (
-            soup.find_all("div", {"data-test": "product-item"}) or soup.find_all("article") or []
-        )
+            for rank, edge in enumerate(edges, 1):
+                try:
+                    node = edge.get("node", {})
 
-        for rank, container in enumerate(product_containers[:50], 1):
-            try:
-                product = self._parse_single_product(container, rank)
-                if product:
+                    # Extract topics
+                    topics = []
+                    topic_edges = node.get("topics", {}).get("edges", [])
+                    for topic_edge in topic_edges:
+                        topic_name = topic_edge.get("node", {}).get("name")
+                        if topic_name:
+                            topics.append(topic_name)
+
+                    # Extract makers
+                    makers = []
+                    maker_edges = node.get("makers", {}).get("edges", [])
+                    for maker_edge in maker_edges:
+                        maker_node = maker_edge.get("node", {})
+                        maker_name = maker_node.get("name") or maker_node.get("username")
+                        if maker_name:
+                            makers.append(maker_name)
+
+                    # Get thumbnail URL
+                    thumbnail_url = None
+                    thumbnail = node.get("thumbnail")
+                    if thumbnail:
+                        thumbnail_url = thumbnail.get("url")
+
+                    # Parse featured date
+                    featured_at = datetime.now()
+                    if node.get("featuredAt"):
+                        try:
+                            # Product Hunt returns ISO 8601 format
+                            featured_at = datetime.fromisoformat(
+                                node["featuredAt"].replace("Z", "+00:00")
+                            )
+                        except Exception as e:
+                            logger.warning(f"Error parsing featuredAt date: {e}")
+
+                    product = ProductHuntProduct(
+                        rank=rank,
+                        name=node.get("name", "Unknown"),
+                        tagline=node.get("tagline", ""),
+                        description=node.get("description", ""),
+                        url=node.get("url", ""),
+                        product_url=node.get("website", ""),
+                        votes=node.get("votesCount", 0),
+                        comments_count=node.get("commentsCount", 0),
+                        thumbnail=thumbnail_url,
+                        topics=topics,
+                        makers=makers,
+                        featured_at=featured_at,
+                    )
+
                     products.append(product)
-            except Exception as e:
-                logger.warning(f"Error parsing product at rank {rank}: {e}")
-                continue
 
-        # If scraping fails, return mock data for demonstration
-        # In production, you would use the official API
-        if not products:
-            logger.warning("Failed to parse products from HTML, using fallback")
-            products = self._get_fallback_products()
+                except Exception as e:
+                    logger.warning(f"Error parsing product at rank {rank}: {e}")
+                    continue
+
+        except Exception as e:
+            logger.error(f"Error parsing GraphQL response: {e}")
 
         return products
 
-    def _parse_single_product(
-        self, container: BeautifulSoup, rank: int
-    ) -> ProductHuntProduct | None:
-        """Parse a single product from HTML container."""
-        # This is a simplified parser
-        # Product Hunt's actual structure requires more complex parsing
-
-        # Try to extract basic info
-        name = "Product Name"
-        tagline = "Product tagline"
-        url = f"{self.BASE_URL}/posts/example"
-        product_url = "https://example.com"
-        votes = 0
-        comments = 0
-
-        # Try to find product link (Product Hunt page)
-        # Common patterns: <a href="/posts/product-name">
-        link_elem = container.find("a", href=True)
-        if link_elem:
-            href = link_elem.get("href", "")
-            if href.startswith("/posts/"):
-                url = f"{self.BASE_URL}{href}"
-            elif href.startswith("http"):
-                # Some links might be absolute
-                if "producthunt.com" in href:
-                    url = href
-                else:
-                    # External link might be the product URL
-                    product_url = href
-
-        # Try to find name
-        name_elem = container.find("h3") or container.find(
-            "a", {"class": lambda x: x and "title" in str(x).lower()}
-        )
-        if name_elem:
-            name = name_elem.get_text(strip=True)
-            # If name element is also a link, use it
-            if name_elem.name == "a" and name_elem.get("href"):
-                href = name_elem.get("href")
-                if href.startswith("/posts/"):
-                    url = f"{self.BASE_URL}{href}"
-
-        # Try to find tagline
-        tagline_elem = container.find("p")
-        if tagline_elem:
-            tagline = tagline_elem.get_text(strip=True)
-
-        # Try to find external product URL
-        # Look for links that go to external domains
-        all_links = container.find_all("a", href=True)
-        for link in all_links:
-            href = link.get("href", "")
-            if href.startswith("http") and "producthunt.com" not in href:
-                product_url = href
-                break
-
-        # Try to find votes/upvotes
-        votes_elem = container.find(text=lambda t: t and ("▲" in str(t) or "upvote" in str(t).lower()))
-        if votes_elem:
-            # Extract number from text
-            import re
-            numbers = re.findall(r'\d+', votes_elem.string or votes_elem.parent.get_text())
-            if numbers:
-                votes = int(numbers[0])
-
-        # Try to find comments count
-        comments_elem = container.find(text=lambda t: t and "comment" in str(t).lower())
-        if comments_elem:
-            import re
-            numbers = re.findall(r'\d+', comments_elem.parent.get_text())
-            if numbers:
-                comments = int(numbers[0])
-
-        return ProductHuntProduct(
-            rank=rank,
-            name=name,
-            tagline=tagline,
-            url=url,
-            product_url=product_url,
-            votes=votes,
-            comments_count=comments,
-            thumbnail=None,
-            topics=[],
-            makers=[],
-            featured_at=datetime.now(),
-        )
-
     def _get_fallback_products(self) -> list[ProductHuntProduct]:
         """
-        Get fallback products for demonstration.
+        Get fallback products when API credentials not configured.
 
-        In production, this should be replaced with actual API integration.
+        Returns:
+            List with placeholder products
         """
         logger.info("Using fallback Product Hunt data")
+
+        placeholders = [
+            ("Configure Product Hunt API", "Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET", ["Setup"]),
+            ("Get Credentials", "Visit https://www.producthunt.com/v2/oauth/applications", ["API"]),
+            ("Create OAuth App", "Create a new application and get Client ID/Secret", ["OAuth"]),
+            ("Set Environment Variables", "Add credentials to your .env file", ["Config"]),
+            ("Enjoy Real Data", "Restart server to fetch real Product Hunt data", ["Success"]),
+        ]
+
         return [
             ProductHuntProduct(
-                rank=1,
-                name="Example Product",
-                tagline="This is a fallback example - configure Product Hunt API for real data",
-                url=f"{self.BASE_URL}/posts/example",
-                product_url="https://example.com",
-                votes=100,
-                comments_count=20,
-                topics=["Developer Tools", "AI"],
-                makers=[],
+                rank=i,
+                name=name,
+                tagline=tagline,
+                description=f"{tagline}. Get your API credentials from Product Hunt to access real trending products.",
+                url=self.BASE_URL,
+                product_url="https://www.producthunt.com/v2/oauth/applications",
+                votes=0,
+                comments_count=0,
+                topics=topics,
+                makers=["Product Hunt"],
                 featured_at=datetime.now(),
             )
+            for i, (name, tagline, topics) in enumerate(placeholders, 1)
         ]
 
     async def fetch_today(self, use_cache: bool = True) -> TrendingResponse:

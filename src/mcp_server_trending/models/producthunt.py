@@ -28,8 +28,9 @@ class ProductHuntProduct(BaseModel):
     votes: int
     comments_count: int
     thumbnail: str | None = None
+    description: str = ""  # Product description
     topics: list[str] = field(default_factory=list)
-    makers: list[ProductHuntMaker] = field(default_factory=list)
+    makers: list[str] = field(default_factory=list)  # Maker names
     featured_at: datetime | None = None
 
 
