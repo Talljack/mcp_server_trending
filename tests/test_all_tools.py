@@ -24,8 +24,8 @@ async def test_all_tools():
         {
             "name": "get_github_trending_repos",
             "fetcher": server.github_fetcher,
-            "method": "fetch_trending_repos",
-            "kwargs": {"language": "python", "limit": 3},
+            "method": "fetch_trending_repositories",
+            "kwargs": {"language": "python", "since": "daily"},
             "description": "GitHub Trending 仓库",
         },
         # Hacker News Tools
