@@ -1,11 +1,15 @@
 """Test configuration for pytest."""
 
-import sys
 import os
+import sys
+
 import pytest
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
+# Configure pytest-asyncio to automatically handle async test functions
+pytest_plugins = ("pytest_asyncio",)
 
 
 @pytest.fixture

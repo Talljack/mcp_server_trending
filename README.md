@@ -9,7 +9,7 @@
 [![MCP](https://img.shields.io/badge/MCP-1.0+-green.svg)](https://modelcontextprotocol.io/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-*让 AI 助手帮你追踪 GitHub、Hacker News、Product Hunt 的热门内容*
+*让 AI 助手帮你追踪全球热门技术内容*
 
 [快速开始](#-快速开始) • [功能特性](#-功能特性) • [文档](#-文档)
 
@@ -24,6 +24,15 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 - 📊 **GitHub Trending** - 热门仓库和开发者
 - 💬 **Hacker News** - 技术社区热门讨论
 - 🚀 **Product Hunt** - 最新产品发布
+- 💰 **Indie Hackers** - 收入报告和社区讨论
+- 🤖 **OpenRouter** - LLM 模型排行榜
+- 💵 **TrustMRR** - MRR/收入排行榜
+- 🔧 **AI Tools Directory** - 热门 AI 工具
+- 🤗 **HuggingFace** - ML 模型和数据集
+- 🇨🇳 **V2EX** - 中文创意工作者社区
+- 📝 **掘金 (Juejin)** - 中文技术社区
+- 🌍 **dev.to** - 国际开发者社区
+- 🔮 **ModelScope** - 魔塔社区 AI 模型与数据集
 
 > 专为独立开发者、Indie Hackers 和技术创业者设计
 
@@ -55,11 +64,28 @@ bash install.sh
 
 编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
+**最小配置（大部分平台可用）**：
 ```json
 {
   "mcpServers": {
     "trending": {
       "command": "mcp-server-trending"
+    }
+  }
+}
+```
+
+**完整配置（启用所有平台）**：
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "env": {
+        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret",
+        "HUGGINGFACE_TOKEN": "your_huggingface_token"
+      }
     }
   }
 }
@@ -76,7 +102,11 @@ bash install.sh
   "name": "Trending",
   "description": "独立开发者热门榜单聚合服务",
   "type": "stdio",
-  "command": "mcp-server-trending"
+  "command": "mcp-server-trending",
+  "env": {
+    "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+    "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+  }
 }
 ```
 
@@ -86,6 +116,178 @@ bash install.sh
   "command": "/path/to/mcp_server_trending/.venv/bin/mcp-server-trending"
 }
 ```
+
+#### Cursor
+
+在项目根目录创建 `.cursor/mcp.json`（项目级）或 `~/.cursor/mcp.json`（全局）:
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+      }
+    }
+  }
+}
+```
+
+#### Cline (VSCode)
+
+打开 Cline 扩展 → MCP Servers → Configure MCP Servers:
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+      },
+      "alwaysAllow": [],
+      "disabled": false
+    }
+  }
+}
+```
+
+#### Continue (VSCode/JetBrains)
+
+在 Continue 配置中添加:
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "trending",
+      "command": "mcp-server-trending",
+      "env": {
+        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+      }
+    }
+  ]
+}
+```
+
+**所有客户端都支持 `env` 配置！** ✅
+
+---
+
+## 🔧 环境变量配置
+
+### 可选配置（按需添加）
+
+#### 1. Product Hunt API Credentials（可选，获取真实产品数据）
+
+**获取方式**：
+1. 访问 https://www.producthunt.com/v2/oauth/applications
+2. 创建一个新应用 (Create a new application)
+3. 复制 **Client ID** 和 **Client Secret**
+
+**配置方法**：
+
+**方式一：在 MCP 配置中添加（推荐）**
+```json
+{
+  "env": {
+    "PRODUCTHUNT_CLIENT_ID": "your_client_id_here",
+    "PRODUCTHUNT_CLIENT_SECRET": "your_client_secret_here"
+  }
+}
+```
+
+**方式二：使用 .env 文件**
+```bash
+cp .env.example .env
+# 编辑 .env 文件
+PRODUCTHUNT_CLIENT_ID=your_client_id_here
+PRODUCTHUNT_CLIENT_SECRET=your_client_secret_here
+```
+
+**注意**：
+- ✅ 不配置会返回友好的占位数据和设置说明
+- ✅ 配置后可获取真实的产品数据、投票数、评论数等
+- 🆓 Product Hunt API 免费使用
+
+---
+
+#### 2. HuggingFace Token（可选，提高请求限制）
+
+**获取方式**：
+1. 访问 https://huggingface.co/settings/tokens
+2. 创建一个 Read Token
+
+**配置方法**：
+
+**方式一：在 MCP 配置中添加（推荐）**
+```json
+{
+  "env": {
+    "HUGGINGFACE_TOKEN": "your_token_here"
+  }
+}
+```
+
+**方式二：使用 .env 文件**
+```bash
+echo "HUGGINGFACE_TOKEN=your_token_here" >> .env
+```
+
+**注意**：
+- ✅ 完全可选，不配置也能正常使用
+- ⚠️ 公开 API 有请求频率限制，Token 可提高限制
+- 🆓 HuggingFace Token 免费
+
+---
+
+#### 3. GitHub Token（可选，提高请求限制）
+
+**获取方式**：
+1. 访问 https://github.com/settings/tokens
+2. 创建一个 Personal Access Token
+
+**配置方法**：
+```json
+{
+  "env": {
+    "GITHUB_TOKEN": "your_token_here"
+  }
+}
+```
+
+**注意**：
+- ✅ 完全可选，不配置也能正常使用
+- ⚠️ Token 可提高 GitHub API 请求限制
+- 🆓 GitHub Token 免费
+
+---
+
+### 完整环境变量示例
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "env": {
+        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
+        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret",
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
+    }
+  }
+}
+```
+
+**提示**：只需要配置你需要的平台，其他可以省略！
 
 ---
 
@@ -100,7 +302,11 @@ Hacker News 上现在有什么热门的技术讨论？
 ```
 
 ```
-同时告诉我 GitHub 上的 Rust 项目和 Hacker News 的技术热点
+帮我看看 Product Hunt 今天有哪些有趣的产品（需要配置 Product Hunt API）
+```
+
+```
+对比一下掘金和 dev.to 上的热门技术文章
 ```
 
 ---
@@ -109,18 +315,63 @@ Hacker News 上现在有什么热门的技术讨论？
 
 ### 已支持平台
 
-| 平台 | 功能 | 可调参数 |
-|------|------|---------|
-| **GitHub Trending** | 热门仓库/开发者 | 语言、时间范围 |
-| **Hacker News** | 各类热门故事 | 类型、数量(1-500) |
-| **Product Hunt** | 产品发布 | 时间范围、主题 |
+| 平台 | 功能 | 状态 | 需要配置? |
+|------|------|------|----------|
+| **GitHub Trending** | 热门仓库/开发者 | ✅ 完全可用 | ❌ 可选 Token |
+| **Hacker News** | 各类热门故事 | ✅ 完全可用 | ❌ 不需要 |
+| **Product Hunt** | 产品发布 | ⚠️ 需配置 API* | ⚠️ 需要 Client ID/Secret |
+| **Indie Hackers** | 收入报告 | ✅ 真实数据 (Firebase) | ❌ 不需要 |
+| **Indie Hackers** | 热门讨论 | ⚠️ 占位数据* | ❌ 不需要 |
+| **TrustMRR** | MRR/收入排行榜 | ✅ 完全可用 | ❌ 不需要 |
+| **AI Tools Directory** | 热门 AI 工具 | ✅ 完全可用 | ❌ 不需要 |
+| **HuggingFace** | ML 模型/数据集 | ✅ 完全可用 | ❌ 可选 Token |
+| **V2EX** | 中文社区热门话题 | ✅ 完全可用 | ❌ 不需要 |
+| **掘金 (Juejin)** | 中文技术文章 | ✅ 完全可用 | ❌ 不需要 |
+| **dev.to** | 国际开发者文章 | ✅ 完全可用 | ❌ 不需要 |
+| **ModelScope** | 魔塔 AI 模型/数据集 | ✅ 完全可用 | ❌ 不需要 |
 
-### 可用工具
+> \* **说明**：
+> - Product Hunt 需要配置 API credentials 才能获取真实数据，否则返回占位数据和配置指引
+> - Indie Hackers 热门讨论因客户端渲染限制，返回占位数据及官网链接
 
+### 可用工具 (18个)
+
+**GitHub** (2个)
 - `get_github_trending_repos` - 获取 GitHub trending 仓库
 - `get_github_trending_developers` - 获取 GitHub trending 开发者
+
+**Hacker News** (1个)
 - `get_hackernews_stories` - 获取 Hacker News 故事
-- `get_producthunt_products` - 获取 Product Hunt 产品
+
+**Product Hunt** (1个)
+- `get_producthunt_products` - 获取 Product Hunt 产品（需配置 API）
+
+**Indie Hackers** (2个)
+- `get_indiehackers_popular` - 获取热门讨论（占位数据）
+- `get_indiehackers_income_reports` - 获取收入报告 💰（真实数据）
+
+**TrustMRR** (1个)
+- `get_trustmrr_rankings` - 获取 MRR/收入排行榜 💵
+
+**AI Tools Directory** (1个)
+- `get_ai_tools` - 获取热门 AI 工具 🔧
+
+**HuggingFace** (2个)
+- `get_huggingface_models` - 获取热门 ML 模型 🤗
+- `get_huggingface_datasets` - 获取热门数据集 📊
+
+**V2EX** (1个) 🇨🇳
+- `get_v2ex_hot_topics` - 获取热门话题
+
+**掘金 (Juejin)** (1个) 📝
+- `get_juejin_articles` - 获取推荐技术文章
+
+**dev.to** (1个) 🌍
+- `get_devto_articles` - 获取开发者文章
+
+**ModelScope** (2个) 🔮
+- `get_modelscope_models` - 获取魔塔社区热门模型
+- `get_modelscope_datasets` - 获取魔塔社区热门数据集
 
 ---
 
@@ -176,3 +427,13 @@ MIT License - 查看 [LICENSE](LICENSE)
 Made with ❤️ for Indie Hackers
 
 </div>
+
+## 数据来源声明
+
+本项目从以下平台聚合公开数据：
+- 仅获取公开展示的信息（标题、摘要、链接）
+- 提供原文链接，引导用户访问原网站
+- 实现了缓存机制，避免频繁请求
+- 不存储完整内容，不用于商业目的
+
+如有任何问题，请联系我们。

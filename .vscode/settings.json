@@ -1,0 +1,26 @@
+{
+  // Ruff 配置
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  // Ruff 扩展配置
+  "ruff.enable": true,
+  "ruff.lint.enable": true,
+  "ruff.fixAll": true,
+  "ruff.organizeImports": true,
+  "ruff.codeAction.fixViolation": {
+    "enable": true
+  },
+  // Python 配置
+  "python.linting.enabled": true,
+  "python.linting.ruffEnabled": true,
+  // 文件保存时的行为
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true
+}

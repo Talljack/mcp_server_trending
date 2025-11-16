@@ -1,7 +1,7 @@
 """Simple in-memory cache implementation."""
 
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class SimpleCache:
@@ -17,9 +17,9 @@ class SimpleCache:
             default_ttl: Default time-to-live in seconds (default: 1 hour)
         """
         self.default_ttl = default_ttl
-        self._cache: Dict[str, Dict[str, Any]] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Get value from cache.
 
@@ -39,7 +39,7 @@ class SimpleCache:
 
         return entry["value"]
 
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+    def set(self, key: str, value: Any, ttl: int | None = None) -> None:
         """
         Set value in cache.
 
@@ -87,7 +87,7 @@ class SimpleCache:
             del self._cache[key]
         return len(expired_keys)
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """
         Get cache statistics.
 

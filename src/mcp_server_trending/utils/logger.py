@@ -2,11 +2,10 @@
 
 import logging
 import sys
-from typing import Optional
 
 
 def setup_logger(
-    name: str = "mcp_server_trending", level: str = "INFO", log_file: Optional[str] = None
+    name: str = "mcp_server_trending", level: str = "INFO", log_file: str | None = None
 ) -> logging.Logger:
     """
     Set up a logger with console and optional file output.

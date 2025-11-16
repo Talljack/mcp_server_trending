@@ -1,7 +1,6 @@
 """GitHub data models."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 from .base import BaseModel
 
@@ -15,8 +14,8 @@ class GitHubDeveloper(BaseModel):
     name: str
     url: str
     avatar: str
-    repo_name: Optional[str] = None
-    repo_description: Optional[str] = None
+    repo_name: str | None = None
+    repo_description: str | None = None
 
 
 @dataclass
@@ -31,9 +30,9 @@ class GitHubRepository(BaseModel):
     stars: int
     forks: int
     stars_today: int
-    language: Optional[str] = None
-    language_color: Optional[str] = None
-    built_by: List[str] = field(default_factory=list)
+    language: str | None = None
+    language_color: str | None = None
+    built_by: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -41,5 +40,5 @@ class GitHubTrendingParams:
     """Parameters for GitHub trending queries."""
 
     time_range: str = "daily"  # daily, weekly, monthly
-    language: Optional[str] = None
-    spoken_language: Optional[str] = None
+    language: str | None = None
+    spoken_language: str | None = None

@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional
 
 from .base import BaseModel
 
@@ -14,7 +13,7 @@ class ProductHuntMaker(BaseModel):
     name: str
     username: str
     url: str
-    avatar: Optional[str] = None
+    avatar: str | None = None
 
 
 @dataclass
@@ -28,10 +27,11 @@ class ProductHuntProduct(BaseModel):
     product_url: str
     votes: int
     comments_count: int
-    thumbnail: Optional[str] = None
-    topics: List[str] = field(default_factory=list)
-    makers: List[ProductHuntMaker] = field(default_factory=list)
-    featured_at: Optional[datetime] = None
+    thumbnail: str | None = None
+    description: str = ""  # Product description
+    topics: list[str] = field(default_factory=list)
+    makers: list[str] = field(default_factory=list)  # Maker names
+    featured_at: datetime | None = None
 
 
 @dataclass
@@ -39,4 +39,4 @@ class ProductHuntParams:
     """Parameters for Product Hunt queries."""
 
     time_range: str = "today"  # today, week, month
-    topic: Optional[str] = None  # Filter by topic
+    topic: str | None = None  # Filter by topic

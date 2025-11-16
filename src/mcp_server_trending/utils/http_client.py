@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -17,11 +17,11 @@ class HTTPClient:
 
     def __init__(
         self,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 10.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
     ):
         """
         Initialize HTTP client.
@@ -38,7 +38,7 @@ class HTTPClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.default_headers = headers or {}
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
         # Rate limiting
         self._last_request_time: float = 0
@@ -64,8 +64,8 @@ class HTTPClient:
     async def get(
         self,
         url: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         **kwargs,
     ) -> httpx.Response:
         """
@@ -121,13 +121,137 @@ class HTTPClient:
 
         raise httpx.HTTPError(f"Failed after {self.max_retries} attempts")
 
+    async def post(
+        self,
+        url: str,
+        data: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        **kwargs,
+    ) -> httpx.Response:
+        """
+        Perform POST request with retry logic.
+
+        Args:
+            url: URL to request (relative to base_url if set)
+            data: Form data to send
+            json: JSON data to send
+            headers: Additional headers
+            **kwargs: Additional arguments for httpx.post
+
+        Returns:
+            HTTP response
+
+        Raises:
+            httpx.HTTPError: If request fails after all retries
+        """
+        full_url = urljoin(self.base_url, url) if self.base_url else url
+        merged_headers = {**self.default_headers, **(headers or {})}
+
+        client = await self._get_client()
+
+        for attempt in range(self.max_retries):
+            try:
+                await self._wait_for_rate_limit()
+
+                logger.debug(f"POST {full_url} (attempt {attempt + 1}/{self.max_retries})")
+                response = await client.post(
+                    full_url, data=data, json=json, headers=merged_headers, **kwargs
+                )
+                response.raise_for_status()
+                return response
+
+            except httpx.HTTPStatusError as e:
+                logger.warning(f"HTTP {e.response.status_code} for {full_url}")
+                if e.response.status_code == 429:  # Rate limited
+                    wait_time = self.retry_delay * (2**attempt)
+                    logger.info(f"Rate limited, waiting {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    continue
+                elif e.response.status_code >= 500:  # Server error, retry
+                    if attempt < self.max_retries - 1:
+                        await asyncio.sleep(self.retry_delay * (attempt + 1))
+                        continue
+                raise
+
+            except (httpx.RequestError, httpx.TimeoutException) as e:
+                logger.warning(f"Request error for {full_url}: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay * (attempt + 1))
+                    continue
+                raise
+
+        raise httpx.HTTPError(f"Failed after {self.max_retries} attempts")
+
+    async def put(
+        self,
+        url: str,
+        data: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        **kwargs,
+    ) -> httpx.Response:
+        """
+        Perform PUT request with retry logic.
+
+        Args:
+            url: URL to request (relative to base_url if set)
+            data: Form data to send
+            json: JSON data to send
+            headers: Additional headers
+            **kwargs: Additional arguments for httpx.put
+
+        Returns:
+            HTTP response
+
+        Raises:
+            httpx.HTTPError: If request fails after all retries
+        """
+        full_url = urljoin(self.base_url, url) if self.base_url else url
+        merged_headers = {**self.default_headers, **(headers or {})}
+
+        client = await self._get_client()
+
+        for attempt in range(self.max_retries):
+            try:
+                await self._wait_for_rate_limit()
+
+                logger.debug(f"PUT {full_url} (attempt {attempt + 1}/{self.max_retries})")
+                response = await client.put(
+                    full_url, data=data, json=json, headers=merged_headers, **kwargs
+                )
+                response.raise_for_status()
+                return response
+
+            except httpx.HTTPStatusError as e:
+                logger.warning(f"HTTP {e.response.status_code} for {full_url}")
+                if e.response.status_code == 429:  # Rate limited
+                    wait_time = self.retry_delay * (2**attempt)
+                    logger.info(f"Rate limited, waiting {wait_time}s")
+                    await asyncio.sleep(wait_time)
+                    continue
+                elif e.response.status_code >= 500:  # Server error, retry
+                    if attempt < self.max_retries - 1:
+                        await asyncio.sleep(self.retry_delay * (attempt + 1))
+                        continue
+                raise
+
+            except (httpx.RequestError, httpx.TimeoutException) as e:
+                logger.warning(f"Request error for {full_url}: {e}")
+                if attempt < self.max_retries - 1:
+                    await asyncio.sleep(self.retry_delay * (attempt + 1))
+                    continue
+                raise
+
+        raise httpx.HTTPError(f"Failed after {self.max_retries} attempts")
+
     async def get_json(
         self,
         url: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform GET request and return JSON response.
 

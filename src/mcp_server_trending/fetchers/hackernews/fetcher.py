@@ -2,12 +2,11 @@
 
 import asyncio
 from datetime import datetime
-from typing import List
 
-from ..base import BaseFetcher
 from ...models.base import TrendingResponse
 from ...models.hackernews import HackerNewsStory
 from ...utils import logger
+from ..base import BaseFetcher
 
 
 class HackerNewsFetcher(BaseFetcher):
@@ -95,7 +94,7 @@ class HackerNewsFetcher(BaseFetcher):
                 error=str(e),
             )
 
-    async def _fetch_story_details(self, story_ids: List[int]) -> List[HackerNewsStory]:
+    async def _fetch_story_details(self, story_ids: list[int]) -> list[HackerNewsStory]:
         """
         Fetch details for multiple stories in parallel.
 
