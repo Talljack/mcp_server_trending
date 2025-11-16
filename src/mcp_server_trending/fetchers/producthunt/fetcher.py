@@ -5,10 +5,10 @@ from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
-from fetchers.base import BaseFetcher
-from models.base import TrendingResponse
-from models.producthunt import ProductHuntMaker, ProductHuntProduct
-from utils import logger
+from ..base import BaseFetcher
+from ...models.base import TrendingResponse
+from ...models.producthunt import ProductHuntMaker, ProductHuntProduct
+from ...utils import logger
 
 
 class ProductHuntFetcher(BaseFetcher):
@@ -63,23 +63,22 @@ class ProductHuntFetcher(BaseFetcher):
 
             # Set headers to mimic browser
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
             }
 
             # Fetch HTML page
             response = await self.http_client.get(url, headers=headers)
 
             # Parse HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
             products = self._parse_products(soup)
 
             # Filter by topic if specified
             if topic:
                 products = [
-                    p for p in products
-                    if any(topic.lower() in t.lower() for t in p.topics)
+                    p for p in products if any(topic.lower() in t.lower() for t in p.topics)
                 ]
 
             metadata = {
@@ -137,9 +136,7 @@ class ProductHuntFetcher(BaseFetcher):
 
         # Try to find product containers (common patterns)
         product_containers = (
-            soup.find_all('div', {'data-test': 'product-item'}) or
-            soup.find_all('article') or
-            []
+            soup.find_all("div", {"data-test": "product-item"}) or soup.find_all("article") or []
         )
 
         for rank, container in enumerate(product_containers[:50], 1):
@@ -160,9 +157,7 @@ class ProductHuntFetcher(BaseFetcher):
         return products
 
     def _parse_single_product(
-        self,
-        container: BeautifulSoup,
-        rank: int
+        self, container: BeautifulSoup, rank: int
     ) -> Optional[ProductHuntProduct]:
         """Parse a single product from HTML container."""
         # This is a simplified parser
@@ -177,15 +172,14 @@ class ProductHuntFetcher(BaseFetcher):
         comments = 0
 
         # Try to find name
-        name_elem = (
-            container.find('h3') or
-            container.find('a', {'class': lambda x: x and 'title' in str(x).lower()})
+        name_elem = container.find("h3") or container.find(
+            "a", {"class": lambda x: x and "title" in str(x).lower()}
         )
         if name_elem:
             name = name_elem.get_text(strip=True)
 
         # Try to find tagline
-        tagline_elem = container.find('p')
+        tagline_elem = container.find("p")
         if tagline_elem:
             tagline = tagline_elem.get_text(strip=True)
 

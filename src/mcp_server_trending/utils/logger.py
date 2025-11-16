@@ -6,9 +6,7 @@ from typing import Optional
 
 
 def setup_logger(
-    name: str = "mcp_server_trending",
-    level: str = "INFO",
-    log_file: Optional[str] = None
+    name: str = "mcp_server_trending", level: str = "INFO", log_file: Optional[str] = None
 ) -> logging.Logger:
     """
     Set up a logger with console and optional file output.
@@ -34,8 +32,7 @@ def setup_logger(
 
     # Formatter
     formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
     )
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)

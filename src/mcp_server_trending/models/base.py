@@ -42,8 +42,7 @@ class TrendingResponse(BaseModel):
         result = super().to_dict()
         # Ensure data items are properly serialized
         if self.data:
-            result['data'] = [
-                item.to_dict() if isinstance(item, BaseModel) else item
-                for item in self.data
+            result["data"] = [
+                item.to_dict() if isinstance(item, BaseModel) else item for item in self.data
             ]
         return result

@@ -4,10 +4,10 @@ import asyncio
 from datetime import datetime
 from typing import List
 
-from fetchers.base import BaseFetcher
-from models.base import TrendingResponse
-from models.hackernews import HackerNewsStory
-from utils import logger
+from ..base import BaseFetcher
+from ...models.base import TrendingResponse
+from ...models.hackernews import HackerNewsStory
+from ...utils import logger
 
 
 class HackerNewsFetcher(BaseFetcher):
@@ -123,20 +123,17 @@ class HackerNewsFetcher(BaseFetcher):
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Filter out None and exceptions
-        stories = [
-            story for story in results
-            if isinstance(story, HackerNewsStory)
-        ]
+        stories = [story for story in results if isinstance(story, HackerNewsStory)]
 
         return stories
 
     def _parse_story(self, data: dict) -> HackerNewsStory:
         """Parse story data from API response."""
         # Determine story type
-        story_type = data.get('type', 'story')
+        story_type = data.get("type", "story")
 
         # URL (may be None for Ask HN, etc.)
-        url = data.get('url')
+        url = data.get("url")
 
         # If no URL, generate HN link
         if not url:
@@ -144,13 +141,13 @@ class HackerNewsFetcher(BaseFetcher):
 
         return HackerNewsStory(
             rank=0,  # Will be set later
-            id=data.get('id', 0),
-            title=data.get('title', ''),
+            id=data.get("id", 0),
+            title=data.get("title", ""),
             url=url,
-            score=data.get('score', 0),
-            author=data.get('by', 'unknown'),
-            time=datetime.fromtimestamp(data.get('time', 0)),
-            descendants=data.get('descendants', 0),
+            score=data.get("score", 0),
+            author=data.get("by", "unknown"),
+            time=datetime.fromtimestamp(data.get("time", 0)),
+            descendants=data.get("descendants", 0),
             story_type=story_type,
         )
 

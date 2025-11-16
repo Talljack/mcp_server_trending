@@ -8,7 +8,7 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from fetchers import (
     GitHubTrendingFetcher,
@@ -28,9 +28,7 @@ async def test_fetchers():
     try:
         async with GitHubTrendingFetcher() as github:
             response = await github.fetch_trending_repositories(
-                time_range="daily",
-                language="python",
-                use_cache=True
+                time_range="daily", language="python", use_cache=True
             )
             if response.success:
                 print(f"   ✓ Successfully fetched {len(response.data)} Python repositories")
@@ -97,6 +95,7 @@ async def test_server():
     except Exception as e:
         print(f"✗ Server initialization failed: {e}")
         import traceback
+
         traceback.print_exc()
 
 

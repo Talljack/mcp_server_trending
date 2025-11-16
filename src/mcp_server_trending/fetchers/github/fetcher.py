@@ -4,10 +4,10 @@ from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
-from fetchers.base import BaseFetcher
-from models.base import TrendingResponse
-from models.github import GitHubDeveloper, GitHubRepository
-from utils import logger
+from ..base import BaseFetcher
+from ...models.base import TrendingResponse
+from ...models.github import GitHubDeveloper, GitHubRepository
+from ...utils import logger
 
 
 class GitHubTrendingFetcher(BaseFetcher):
@@ -58,17 +58,13 @@ class GitHubTrendingFetcher(BaseFetcher):
             # Build URL with parameters
             params = {}
             if language:
-                params['language'] = language
+                params["language"] = language
             if spoken_language:
-                params['spoken_language_code'] = spoken_language
+                params["spoken_language_code"] = spoken_language
 
             # Map time_range to GitHub's since parameter
-            since_map = {
-                "daily": "daily",
-                "weekly": "weekly",
-                "monthly": "monthly"
-            }
-            params['since'] = since_map.get(time_range, "daily")
+            since_map = {"daily": "daily", "weekly": "weekly", "monthly": "monthly"}
+            params["since"] = since_map.get(time_range, "daily")
 
             # Fetch HTML page
             response = await self.http_client.get(
@@ -77,7 +73,7 @@ class GitHubTrendingFetcher(BaseFetcher):
             )
 
             # Parse HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
             repos = self._parse_repositories(soup)
 
             metadata = {
@@ -106,74 +102,78 @@ class GitHubTrendingFetcher(BaseFetcher):
     def _parse_repositories(self, soup: BeautifulSoup) -> List[GitHubRepository]:
         """Parse repository data from HTML."""
         repos = []
-        articles = soup.find_all('article', class_='Box-row')
+        articles = soup.find_all("article", class_="Box-row")
 
         for rank, article in enumerate(articles, 1):
             try:
                 # Repository name and author
-                h2 = article.find('h2', class_='h3')
+                h2 = article.find("h2", class_="h3")
                 if not h2:
                     continue
 
-                link = h2.find('a')
+                link = h2.find("a")
                 if not link:
                     continue
 
-                href = link.get('href', '')
-                parts = href.strip('/').split('/')
+                href = link.get("href", "")
+                parts = href.strip("/").split("/")
                 if len(parts) < 2:
                     continue
 
                 author, name = parts[0], parts[1]
 
                 # Description
-                description_elem = article.find('p', class_='col-9')
+                description_elem = article.find("p", class_="col-9")
                 description = description_elem.get_text(strip=True) if description_elem else ""
 
                 # Language
                 language = None
                 language_color = None
-                lang_elem = article.find('span', itemprop='programmingLanguage')
+                lang_elem = article.find("span", itemprop="programmingLanguage")
                 if lang_elem:
                     language = lang_elem.get_text(strip=True)
-                    color_span = lang_elem.find_previous_sibling('span')
-                    if color_span and 'style' in color_span.attrs:
+                    color_span = lang_elem.find_previous_sibling("span")
+                    if color_span and "style" in color_span.attrs:
                         # Extract color from style
-                        style = color_span['style']
-                        if 'background-color:' in style:
-                            language_color = style.split('background-color:')[1].split(';')[0].strip()
+                        style = color_span["style"]
+                        if "background-color:" in style:
+                            language_color = (
+                                style.split("background-color:")[1].split(";")[0].strip()
+                            )
 
                 # Stars (total)
                 stars = 0
-                star_elem = article.find('svg', class_='octicon-star')
+                star_elem = article.find("svg", class_="octicon-star")
                 if star_elem:
-                    star_parent = star_elem.find_parent('a')
+                    star_parent = star_elem.find_parent("a")
                     if star_parent:
                         star_text = star_parent.get_text(strip=True)
                         stars = self._parse_number(star_text)
 
                 # Forks
                 forks = 0
-                fork_elem = article.find('svg', class_='octicon-repo-forked')
+                fork_elem = article.find("svg", class_="octicon-repo-forked")
                 if fork_elem:
-                    fork_parent = fork_elem.find_parent('a')
+                    fork_parent = fork_elem.find_parent("a")
                     if fork_parent:
                         fork_text = fork_parent.get_text(strip=True)
                         forks = self._parse_number(fork_text)
 
                 # Stars today
                 stars_today = 0
-                stars_today_elem = article.find('span', class_='float-sm-right')
+                stars_today_elem = article.find("span", class_="float-sm-right")
                 if stars_today_elem:
                     stars_today_text = stars_today_elem.get_text(strip=True)
-                    stars_today = self._parse_number(stars_today_text.split('stars')[0])
+                    stars_today = self._parse_number(stars_today_text.split("stars")[0])
 
                 # Built by (contributors)
                 built_by = []
-                built_by_elem = article.find('span', string=lambda text: text and 'Built by' in text)
+                built_by_elem = article.find(
+                    "span", string=lambda text: text and "Built by" in text
+                )
                 if built_by_elem:
-                    avatars = built_by_elem.find_parent().find_all('img')
-                    built_by = [img.get('alt', '').strip('@') for img in avatars if img.get('alt')]
+                    avatars = built_by_elem.find_parent().find_all("img")
+                    built_by = [img.get("alt", "").strip("@") for img in avatars if img.get("alt")]
 
                 repo = GitHubRepository(
                     rank=rank,
@@ -232,20 +232,16 @@ class GitHubTrendingFetcher(BaseFetcher):
             url = f"{self.BASE_URL}/developers"
             params = {}
             if language:
-                params['language'] = language
+                params["language"] = language
 
-            since_map = {
-                "daily": "daily",
-                "weekly": "weekly",
-                "monthly": "monthly"
-            }
-            params['since'] = since_map.get(time_range, "daily")
+            since_map = {"daily": "daily", "weekly": "weekly", "monthly": "monthly"}
+            params["since"] = since_map.get(time_range, "daily")
 
             # Fetch HTML page
             response = await self.http_client.get(url, params=params)
 
             # Parse HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
             developers = self._parse_developers(soup)
 
             metadata = {
@@ -273,41 +269,41 @@ class GitHubTrendingFetcher(BaseFetcher):
     def _parse_developers(self, soup: BeautifulSoup) -> List[GitHubDeveloper]:
         """Parse developer data from HTML."""
         developers = []
-        articles = soup.find_all('article', class_='Box-row')
+        articles = soup.find_all("article", class_="Box-row")
 
         for rank, article in enumerate(articles, 1):
             try:
                 # Developer username and name
-                h1 = article.find('h1', class_='h3')
+                h1 = article.find("h1", class_="h3")
                 if not h1:
                     continue
 
-                link = h1.find('a')
+                link = h1.find("a")
                 if not link:
                     continue
 
                 username = link.get_text(strip=True)
-                href = link.get('href', '')
+                href = link.get("href", "")
 
                 # Full name
-                name_elem = h1.find('span', class_='f4')
+                name_elem = h1.find("span", class_="f4")
                 name = name_elem.get_text(strip=True) if name_elem else username
 
                 # Avatar
                 avatar = ""
-                img = article.find('img', class_='avatar')
+                img = article.find("img", class_="avatar")
                 if img:
-                    avatar = img.get('src', '')
+                    avatar = img.get("src", "")
 
                 # Popular repo (if available)
                 repo_name = None
                 repo_description = None
-                repo_elem = article.find('article', class_='mt-3')
+                repo_elem = article.find("article", class_="mt-3")
                 if repo_elem:
-                    repo_link = repo_elem.find('a')
+                    repo_link = repo_elem.find("a")
                     if repo_link:
                         repo_name = repo_link.get_text(strip=True)
-                    desc_elem = repo_elem.find('div', class_='f6')
+                    desc_elem = repo_elem.find("div", class_="f6")
                     if desc_elem:
                         repo_description = desc_elem.get_text(strip=True)
 
@@ -332,11 +328,11 @@ class GitHubTrendingFetcher(BaseFetcher):
     def _parse_number(text: str) -> int:
         """Parse number from text (handles k, m suffixes)."""
         try:
-            text = text.strip().replace(',', '')
-            if 'k' in text.lower():
-                return int(float(text.lower().replace('k', '')) * 1000)
-            elif 'm' in text.lower():
-                return int(float(text.lower().replace('m', '')) * 1000000)
+            text = text.strip().replace(",", "")
+            if "k" in text.lower():
+                return int(float(text.lower().replace("k", "")) * 1000)
+            elif "m" in text.lower():
+                return int(float(text.lower().replace("m", "")) * 1000000)
             else:
                 return int(text)
         except (ValueError, AttributeError):

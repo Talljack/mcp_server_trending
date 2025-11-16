@@ -1,15 +1,17 @@
 """MCP Server implementation for Trending data."""
 
 import asyncio
+import sys
 from typing import Any, Dict, Optional
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
 from mcp.types import Tool, TextContent
 
-from config import config
-from fetchers import GitHubTrendingFetcher, HackerNewsFetcher, ProductHuntFetcher
-from utils import SimpleCache, logger, setup_logger
+from . import __version__
+from .config import config
+from .fetchers import GitHubTrendingFetcher, HackerNewsFetcher, ProductHuntFetcher
+from .utils import SimpleCache, logger, setup_logger
 
 
 class TrendingMCPServer:
@@ -54,23 +56,23 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["daily", "weekly", "monthly"],
                                 "default": "daily",
-                                "description": "Time range for trending data"
+                                "description": "Time range for trending data",
                             },
                             "language": {
                                 "type": "string",
-                                "description": "Filter by programming language (e.g., python, javascript, go)"
+                                "description": "Filter by programming language (e.g., python, javascript, go)",
                             },
                             "spoken_language": {
                                 "type": "string",
-                                "description": "Filter by spoken language (e.g., en, zh)"
+                                "description": "Filter by spoken language (e.g., en, zh)",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data"
-                            }
-                        }
-                    }
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
                 ),
                 Tool(
                     name="get_github_trending_developers",
@@ -82,19 +84,19 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["daily", "weekly", "monthly"],
                                 "default": "daily",
-                                "description": "Time range for trending data"
+                                "description": "Time range for trending data",
                             },
                             "language": {
                                 "type": "string",
-                                "description": "Filter by programming language (e.g., python, javascript, go)"
+                                "description": "Filter by programming language (e.g., python, javascript, go)",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data"
-                            }
-                        }
-                    }
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
                 ),
                 # Hacker News Tools
                 Tool(
@@ -107,22 +109,22 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["top", "best", "new", "ask", "show", "job"],
                                 "default": "top",
-                                "description": "Type of stories to fetch"
+                                "description": "Type of stories to fetch",
                             },
                             "limit": {
                                 "type": "integer",
                                 "default": 30,
                                 "minimum": 1,
                                 "maximum": 500,
-                                "description": "Number of stories to fetch"
+                                "description": "Number of stories to fetch",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data"
-                            }
-                        }
-                    }
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
                 ),
                 # Product Hunt Tools
                 Tool(
@@ -135,19 +137,19 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["today", "week", "month"],
                                 "default": "today",
-                                "description": "Time range for products"
+                                "description": "Time range for products",
                             },
                             "topic": {
                                 "type": "string",
-                                "description": "Filter by topic (e.g., 'Developer Tools', 'AI')"
+                                "description": "Filter by topic (e.g., 'Developer Tools', 'AI')",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data"
-                            }
-                        }
-                    }
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
                 ),
             ]
 
@@ -165,10 +167,7 @@ class TrendingMCPServer:
                         spoken_language=arguments.get("spoken_language"),
                         use_cache=arguments.get("use_cache", True),
                     )
-                    return [TextContent(
-                        type="text",
-                        text=self._format_response(response)
-                    )]
+                    return [TextContent(type="text", text=self._format_response(response))]
 
                 elif name == "get_github_trending_developers":
                     response = await self.github_fetcher.fetch_trending_developers(
@@ -176,10 +175,7 @@ class TrendingMCPServer:
                         language=arguments.get("language"),
                         use_cache=arguments.get("use_cache", True),
                     )
-                    return [TextContent(
-                        type="text",
-                        text=self._format_response(response)
-                    )]
+                    return [TextContent(type="text", text=self._format_response(response))]
 
                 # Hacker News Tools
                 elif name == "get_hackernews_stories":
@@ -188,10 +184,7 @@ class TrendingMCPServer:
                         limit=arguments.get("limit", 30),
                         use_cache=arguments.get("use_cache", True),
                     )
-                    return [TextContent(
-                        type="text",
-                        text=self._format_response(response)
-                    )]
+                    return [TextContent(type="text", text=self._format_response(response))]
 
                 # Product Hunt Tools
                 elif name == "get_producthunt_products":
@@ -200,20 +193,14 @@ class TrendingMCPServer:
                         topic=arguments.get("topic"),
                         use_cache=arguments.get("use_cache", True),
                     )
-                    return [TextContent(
-                        type="text",
-                        text=self._format_response(response)
-                    )]
+                    return [TextContent(type="text", text=self._format_response(response))]
 
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
             except Exception as e:
                 logger.error(f"Error executing tool {name}: {e}", exc_info=True)
-                return [TextContent(
-                    type="text",
-                    text=f"Error: {str(e)}"
-                )]
+                return [TextContent(type="text", text=f"Error: {str(e)}")]
 
     def _format_response(self, response: Any) -> str:
         """
@@ -239,9 +226,7 @@ class TrendingMCPServer:
 
         async with stdio_server() as (read_stream, write_stream):
             await self.server.run(
-                read_stream,
-                write_stream,
-                self.server.create_initialization_options()
+                read_stream, write_stream, self.server.create_initialization_options()
             )
 
     async def cleanup(self):
@@ -267,6 +252,11 @@ async def main():
 
 def cli_main():
     """CLI entry point."""
+    # Handle --version flag
+    if len(sys.argv) > 1 and sys.argv[1] in ("--version", "-v"):
+        print(f"mcp-server-trending {__version__}")
+        sys.exit(0)
+    
     asyncio.run(main())
 
 
