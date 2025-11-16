@@ -31,6 +31,12 @@ class RedditFetcher(BaseFetcher):
             "OpenAI",
             "StableDiffusion",
             "LocalLLaMA",
+            "Claude",
+            "Gemini",
+            "Grok",
+            "Perplexity",
+            "Bing",
+            "Google",
         ],
         "ml": ["MachineLearning", "learnmachinelearning", "datascience", "deeplearning"],
         "crypto": ["cryptocurrency", "Bitcoin", "ethereum", "CryptoMarkets", "CryptoTechnology"],
@@ -45,6 +51,11 @@ class RedditFetcher(BaseFetcher):
             "coding",
             "Python",
             "javascript",
+            "typescript",
+            "rust",
+            "go",
+            "swift",
+            "java",
         ],
         "python": ["Python", "learnpython", "pythonforengineers", "django", "flask"],
         "javascript": ["javascript", "learnjavascript", "node", "reactjs", "vuejs"],
@@ -71,6 +82,11 @@ class RedditFetcher(BaseFetcher):
         self.client_id = os.getenv("REDDIT_CLIENT_ID")
         self.client_secret = os.getenv("REDDIT_CLIENT_SECRET")
         self.access_token = None
+
+        # Reddit requires a User-Agent to avoid 403 errors
+        self.reddit_headers = {
+            "User-Agent": "MCP-Server-Trending/1.0 (https://github.com/your-repo; compatible with Reddit API)",
+        }
 
     def get_platform_name(self) -> str:
         """Get platform name."""
@@ -115,7 +131,7 @@ class RedditFetcher(BaseFetcher):
 
             logger.info(f"Fetching hot posts from r/{subreddit} (time_range={time_range})")
 
-            response = await self.http_client.get(url, params=params)
+            response = await self.http_client.get(url, params=params, headers=self.reddit_headers)
             data = response.json()
 
             posts = self._parse_posts(data, subreddit)
@@ -134,7 +150,7 @@ class RedditFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching Reddit hot posts from r/{subreddit}: {e}")
-            return self._create_response(success=False, data_type="subreddit_hot", error=str(e))
+            return self._create_response(success=False, data_type="subreddit_hot", data=[], error=str(e))
 
     async def fetch_subreddit_top(
         self,
@@ -174,7 +190,7 @@ class RedditFetcher(BaseFetcher):
 
             logger.info(f"Fetching top posts from r/{subreddit} (time_range={time_range})")
 
-            response = await self.http_client.get(url, params=params)
+            response = await self.http_client.get(url, params=params, headers=self.reddit_headers)
             data = response.json()
 
             posts = self._parse_posts(data, subreddit)
@@ -193,7 +209,7 @@ class RedditFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching Reddit top posts from r/{subreddit}: {e}")
-            return self._create_response(success=False, data_type="subreddit_top", error=str(e))
+            return self._create_response(success=False, data_type="subreddit_top", data=[], error=str(e))
 
     async def fetch_multi_subreddits(
         self,
@@ -242,6 +258,51 @@ class RedditFetcher(BaseFetcher):
             },
         )
 
+    async def search_subreddits(
+        self,
+        query: str,
+        limit: int = 10,
+    ) -> list[str]:
+        """
+        Search for subreddits by keyword using Reddit Search API.
+
+        Args:
+            query: Search keyword (e.g., 'machine learning', '区块链', 'startup')
+            limit: Maximum number of subreddits to return
+
+        Returns:
+            List of subreddit names (without 'r/' prefix)
+        """
+        try:
+            url = f"{self.public_api_url}/subreddits/search.json"
+            params = {
+                "q": query,
+                "limit": limit,
+                "sort": "relevance",
+            }
+
+            logger.info(f"Searching subreddits with query: '{query}'")
+            response = await self.http_client.get(url, params=params, headers=self.reddit_headers)
+            data = response.json()
+
+            subreddits = []
+            children = data.get("data", {}).get("children", [])
+
+            for item in children:
+                subreddit_data = item.get("data", {})
+                subreddit_name = subreddit_data.get("display_name")
+
+                # Filter out NSFW and quarantined subreddits
+                if subreddit_name and not subreddit_data.get("over18", False) and not subreddit_data.get("quarantine", False):
+                    subreddits.append(subreddit_name)
+
+            logger.info(f"Found {len(subreddits)} subreddits for query '{query}': {subreddits[:5]}")
+            return subreddits
+
+        except Exception as e:
+            logger.warning(f"Error searching subreddits for '{query}': {e}")
+            return []
+
     async def fetch_by_topic(
         self,
         topic: str | None = None,
@@ -256,6 +317,7 @@ class RedditFetcher(BaseFetcher):
 
         Args:
             topic: Topic keyword (e.g., 'ai', 'crypto', 'indie'). If None, uses default indie subreddits.
+                   Supports ANY keyword - will search Reddit for relevant subreddits if not in predefined list.
             sort_by: Sort method ('hot', 'top')
             time_range: Time range for posts
             limit_per_subreddit: Number of posts per subreddit
@@ -292,9 +354,19 @@ class RedditFetcher(BaseFetcher):
                     # Use the first match
                     topic_used, subreddits = matched_topics[0]
                 else:
-                    # Fallback to treating input as subreddit name
-                    subreddits = [topic_normalized]
-                    topic_used = f"custom ({topic_normalized})"
+                    # NEW: Search Reddit for relevant subreddits using keyword
+                    logger.info(f"No predefined match for '{topic_normalized}', searching Reddit...")
+                    searched_subreddits = await self.search_subreddits(query=topic_normalized, limit=10)
+
+                    if searched_subreddits:
+                        # Found subreddits via search
+                        subreddits = searched_subreddits
+                        topic_used = f"search: {topic_normalized}"
+                        logger.info(f"Using {len(subreddits)} subreddits from search results")
+                    else:
+                        # Fallback: treat as subreddit name
+                        subreddits = [topic_normalized]
+                        topic_used = f"custom ({topic_normalized})"
 
         logger.info(
             f"Fetching Reddit posts for topic '{topic_used}' from subreddits: {subreddits[:5]}..."

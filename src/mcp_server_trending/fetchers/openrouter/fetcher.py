@@ -1,8 +1,8 @@
 """OpenRouter LLM rankings fetcher implementation."""
 
-import os
 from typing import Any
 
+from ...config import config
 from ...models import LLMModel, TrendingResponse
 from ...utils import logger
 from ..base import BaseFetcher
@@ -14,11 +14,45 @@ class OpenRouterFetcher(BaseFetcher):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.base_url = "https://openrouter.ai/api/v1"
-        self.api_key = os.getenv("OPENROUTER_API_KEY")  # Optional
+        # 从 config 读取 API key
+        self.api_key = config.openrouter_api_key
 
     def get_platform_name(self) -> str:
         """Get platform name."""
         return "openrouter"
+
+    def _check_api_key(self) -> TrendingResponse | None:
+        """
+        Check if API key is configured.
+
+        Returns:
+            None if API key is configured, error response otherwise
+        """
+        if not self.api_key:
+            error_msg = (
+                "❌ OpenRouter API key not configured.\n\n"
+                "To use OpenRouter tools, you need to configure an API key:\n\n"
+                "Option 1: Using .env file (recommended)\n"
+                "  1. Copy .env.example to .env\n"
+                "  2. Add: OPENROUTER_API_KEY=your_api_key_here\n"
+                "  3. Get your key at: https://openrouter.ai/keys\n\n"
+                "Option 2: Environment variable\n"
+                "  export OPENROUTER_API_KEY=your_api_key_here\n\n"
+                "📖 OpenRouter provides free tier with limited usage.\n"
+                "🔑 You can get an API key at: https://openrouter.ai/keys"
+            )
+            logger.error("OpenRouter API key not configured")
+            return self._create_response(
+                success=False,
+                data_type="error",
+                data=[],
+                error=error_msg,
+                metadata={
+                    "requires_api_key": True,
+                    "api_key_url": "https://openrouter.ai/keys",
+                },
+            )
+        return None
 
     async def fetch_models(
         self, limit: int | None = None, use_cache: bool = True
@@ -42,6 +76,11 @@ class OpenRouterFetcher(BaseFetcher):
 
     async def _fetch_models_internal(self, limit: int | None = None) -> TrendingResponse:
         """Internal implementation to fetch models."""
+        # Check API key
+        error_response = self._check_api_key()
+        if error_response:
+            return error_response
+
         try:
             url = f"{self.base_url}/models"
             headers = {}

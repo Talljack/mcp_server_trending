@@ -7,6 +7,9 @@ from .producthunt import ProductHuntFetcher
 from .indiehackers import IndieHackersFetcher
 from .reddit import RedditFetcher
 from .openrouter import OpenRouterFetcher
+from .trustmrr import TrustMRRFetcher
+from .aitools import AIToolsFetcher
+from .huggingface import HuggingFaceFetcher
 
 __all__ = [
     "BaseFetcher",
@@ -16,4 +19,7 @@ __all__ = [
     "IndieHackersFetcher",
     "RedditFetcher",
     "OpenRouterFetcher",
+    "TrustMRRFetcher",
+    "AIToolsFetcher",
+    "HuggingFaceFetcher",
 ]

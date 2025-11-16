@@ -170,17 +170,63 @@ class ProductHuntFetcher(BaseFetcher):
         votes = 0
         comments = 0
 
+        # Try to find product link (Product Hunt page)
+        # Common patterns: <a href="/posts/product-name">
+        link_elem = container.find("a", href=True)
+        if link_elem:
+            href = link_elem.get("href", "")
+            if href.startswith("/posts/"):
+                url = f"{self.BASE_URL}{href}"
+            elif href.startswith("http"):
+                # Some links might be absolute
+                if "producthunt.com" in href:
+                    url = href
+                else:
+                    # External link might be the product URL
+                    product_url = href
+
         # Try to find name
         name_elem = container.find("h3") or container.find(
             "a", {"class": lambda x: x and "title" in str(x).lower()}
         )
         if name_elem:
             name = name_elem.get_text(strip=True)
+            # If name element is also a link, use it
+            if name_elem.name == "a" and name_elem.get("href"):
+                href = name_elem.get("href")
+                if href.startswith("/posts/"):
+                    url = f"{self.BASE_URL}{href}"
 
         # Try to find tagline
         tagline_elem = container.find("p")
         if tagline_elem:
             tagline = tagline_elem.get_text(strip=True)
+
+        # Try to find external product URL
+        # Look for links that go to external domains
+        all_links = container.find_all("a", href=True)
+        for link in all_links:
+            href = link.get("href", "")
+            if href.startswith("http") and "producthunt.com" not in href:
+                product_url = href
+                break
+
+        # Try to find votes/upvotes
+        votes_elem = container.find(text=lambda t: t and ("▲" in str(t) or "upvote" in str(t).lower()))
+        if votes_elem:
+            # Extract number from text
+            import re
+            numbers = re.findall(r'\d+', votes_elem.string or votes_elem.parent.get_text())
+            if numbers:
+                votes = int(numbers[0])
+
+        # Try to find comments count
+        comments_elem = container.find(text=lambda t: t and "comment" in str(t).lower())
+        if comments_elem:
+            import re
+            numbers = re.findall(r'\d+', comments_elem.parent.get_text())
+            if numbers:
+                comments = int(numbers[0])
 
         return ProductHuntProduct(
             rank=rank,

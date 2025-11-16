@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..models.base import TrendingResponse
 from ..utils import HTTPClient, SimpleCache, logger
@@ -21,8 +21,8 @@ class BaseFetcher(ABC):
 
     def __init__(
         self,
-        cache: Optional[SimpleCache] = None,
-        http_client: Optional[HTTPClient] = None,
+        cache: SimpleCache | None = None,
+        http_client: HTTPClient | None = None,
         cache_ttl: int = 3600,
     ):
         """
@@ -64,7 +64,7 @@ class BaseFetcher(ABC):
             return f"{self.platform_name}:{data_type}:{param_str}"
         return f"{self.platform_name}:{data_type}"
 
-    def _get_cached_response(self, cache_key: str) -> Optional[TrendingResponse]:
+    def _get_cached_response(self, cache_key: str) -> TrendingResponse | None:
         """
         Get cached response if available.
 
@@ -96,9 +96,9 @@ class BaseFetcher(ABC):
         self,
         success: bool,
         data_type: str,
-        data: List[Any],
-        metadata: Optional[Dict[str, Any]] = None,
-        error: Optional[str] = None,
+        data: list[Any],
+        metadata: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> TrendingResponse:
         """
         Create standardized response.

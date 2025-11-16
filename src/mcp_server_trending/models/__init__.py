@@ -7,6 +7,9 @@ from .producthunt import ProductHuntMaker, ProductHuntParams, ProductHuntProduct
 from .indiehackers import IndieHackersPost, IncomeReport, ProjectMilestone
 from .reddit import RedditPost, SubredditInfo
 from .openrouter import LLMModel, ModelComparison, ModelRanking
+from .trustmrr import TrustMRRProject
+from .aitools import AITool
+from .huggingface import HFModel, HFDataset
 
 __all__ = [
     "BaseModel",
@@ -27,4 +30,8 @@ __all__ = [
     "LLMModel",
     "ModelComparison",
     "ModelRanking",
+    "TrustMRRProject",
+    "AITool",
+    "HFModel",
+    "HFDataset",
 ]

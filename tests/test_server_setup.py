@@ -4,9 +4,8 @@
 """
 
 import asyncio
-import json
-import sys
 import os
+import sys
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -23,6 +22,12 @@ async def test_server_tools():
     print(f"✓ GitHub Fetcher: {server.github_fetcher.platform_name}")
     print(f"✓ Hacker News Fetcher: {server.hackernews_fetcher.platform_name}")
     print(f"✓ Product Hunt Fetcher: {server.producthunt_fetcher.platform_name}")
+    print(f"✓ Indie Hackers Fetcher: {server.indiehackers_fetcher.platform_name}")
+    print(f"✓ Reddit Fetcher: {server.reddit_fetcher.platform_name}")
+    print(f"✓ OpenRouter Fetcher: {server.openrouter_fetcher.platform_name}")
+    print(f"✓ TrustMRR Fetcher: {server.trustmrr_fetcher.platform_name}")
+    print(f"✓ AI Tools Fetcher: {server.aitools_fetcher.platform_name}")
+    print(f"✓ HuggingFace Fetcher: {server.huggingface_fetcher.platform_name}")
 
     print("\n所有组件初始化成功！")
     print("\nMCP Server 配置已添加到 Claude Desktop。")

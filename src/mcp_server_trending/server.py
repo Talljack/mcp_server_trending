@@ -11,12 +11,15 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .config import config
 from .fetchers import (
+    AIToolsFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
+    HuggingFaceFetcher,
     IndieHackersFetcher,
     OpenRouterFetcher,
     ProductHuntFetcher,
     RedditFetcher,
+    TrustMRRFetcher,
 )
 from .utils import SimpleCache, logger, setup_logger
 
@@ -42,6 +45,9 @@ class TrendingMCPServer:
         self.indiehackers_fetcher = IndieHackersFetcher(cache=self.cache)
         self.reddit_fetcher = RedditFetcher(cache=self.cache)
         self.openrouter_fetcher = OpenRouterFetcher(cache=self.cache)
+        self.trustmrr_fetcher = TrustMRRFetcher(cache=self.cache)
+        self.aitools_fetcher = AIToolsFetcher(cache=self.cache)
+        self.huggingface_fetcher = HuggingFaceFetcher(cache=self.cache)
 
         # Register handlers
         self._register_handlers()
@@ -245,13 +251,13 @@ class TrendingMCPServer:
                 ),
                 Tool(
                     name="get_reddit_by_topic",
-                    description="Get trending posts by topic (intelligent subreddit selection). Supports topics like: ai, crypto, indie, startup, saas, programming, python, javascript, web, mobile, design, business, marketing, gaming, devops, security. If no topic specified, returns posts from indie developer communities.",
+                    description="Get trending posts by topic with intelligent subreddit selection. Supports 20+ predefined topics (ai, crypto, indie, startup, saas, programming, python, javascript, web, mobile, design, business, marketing, gaming, devops, security) AND automatic keyword search for ANY topic not in the list. Examples: 'ai', 'quantum computing', 'indie game development', 'sustainable agriculture'. If no topic specified, returns posts from indie developer communities.",
                     inputSchema={
                         "type": "object",
                         "properties": {
                             "topic": {
                                 "type": "string",
-                                "description": "Topic keyword (e.g., 'ai', 'crypto', 'indie', 'startup'). Leave empty for default indie content.",
+                                "description": "Topic keyword or ANY search term. Predefined topics are faster and more reliable. Custom keywords will automatically search Reddit for relevant subreddits (may be slower and subject to network restrictions). Leave empty for default indie content.",
                             },
                             "sort_by": {
                                 "type": "string",
@@ -332,6 +338,121 @@ class TrendingMCPServer:
                                 "minimum": 1,
                                 "maximum": 100,
                                 "description": "Number of models to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # TrustMRR Tools
+                Tool(
+                    name="get_trustmrr_rankings",
+                    description="Get MRR/revenue rankings from TrustMRR. See publicly shared revenue data from successful indie projects and SaaS products.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of projects to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # AI Tools Directory
+                Tool(
+                    name="get_ai_tools",
+                    description="Get trending AI tools from directory (There's An AI For That). Discover the latest and most popular AI tools across different categories.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "description": "Filter by category (e.g., 'productivity', 'writing', 'design')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of tools to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # HuggingFace Tools
+                Tool(
+                    name="get_huggingface_models",
+                    description="Get trending models from HuggingFace. Discover the most popular and downloaded ML models for various tasks like text generation, image classification, etc.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["downloads", "likes", "modified"],
+                                "default": "downloads",
+                                "description": "Sort models by downloads, likes, or last modified",
+                            },
+                            "task": {
+                                "type": "string",
+                                "description": "Filter by task (e.g., 'text-generation', 'image-classification', 'text-to-image')",
+                            },
+                            "library": {
+                                "type": "string",
+                                "description": "Filter by library (e.g., 'transformers', 'diffusers', 'sentence-transformers')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_huggingface_datasets",
+                    description="Get trending datasets from HuggingFace. Find popular datasets for training and fine-tuning ML models.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["downloads", "likes", "modified"],
+                                "default": "downloads",
+                                "description": "Sort datasets by downloads, likes, or last modified",
+                            },
+                            "task": {
+                                "type": "string",
+                                "description": "Filter by task category (e.g., 'text-classification', 'translation', 'question-answering')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of datasets to return",
                             },
                             "use_cache": {
                                 "type": "boolean",
@@ -455,6 +576,43 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # TrustMRR Tools
+                elif name == "get_trustmrr_rankings":
+                    response = await self.trustmrr_fetcher.fetch_rankings(
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # AI Tools Directory
+                elif name == "get_ai_tools":
+                    response = await self.aitools_fetcher.fetch_trending(
+                        category=arguments.get("category"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # HuggingFace Tools
+                elif name == "get_huggingface_models":
+                    response = await self.huggingface_fetcher.fetch_trending_models(
+                        sort_by=arguments.get("sort_by", "downloads"),
+                        task=arguments.get("task"),
+                        library=arguments.get("library"),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_huggingface_datasets":
+                    response = await self.huggingface_fetcher.fetch_trending_datasets(
+                        sort_by=arguments.get("sort_by", "downloads"),
+                        task=arguments.get("task"),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -498,6 +656,9 @@ class TrendingMCPServer:
         await self.indiehackers_fetcher.close()
         await self.reddit_fetcher.close()
         await self.openrouter_fetcher.close()
+        await self.trustmrr_fetcher.close()
+        await self.aitools_fetcher.close()
+        await self.huggingface_fetcher.close()
 
 
 async def main():
