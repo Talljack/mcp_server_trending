@@ -9,12 +9,12 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 
 async def test_server_tools():
     """测试服务器是否可以列出工具"""
-    from server import TrendingMCPServer
+    from mcp_server_trending.server import TrendingMCPServer
 
     print("初始化 MCP Server...")
     server = TrendingMCPServer()

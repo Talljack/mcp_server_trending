@@ -33,11 +33,11 @@ class SimpleCache:
             return None
 
         entry = self._cache[key]
-        if time.time() > entry['expires_at']:
+        if time.time() > entry["expires_at"]:
             del self._cache[key]
             return None
 
-        return entry['value']
+        return entry["value"]
 
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
         """
@@ -50,9 +50,9 @@ class SimpleCache:
         """
         ttl = ttl if ttl is not None else self.default_ttl
         self._cache[key] = {
-            'value': value,
-            'expires_at': time.time() + ttl,
-            'created_at': time.time()
+            "value": value,
+            "expires_at": time.time() + ttl,
+            "created_at": time.time(),
         }
 
     def delete(self, key: str) -> bool:
@@ -82,10 +82,7 @@ class SimpleCache:
             Number of entries removed
         """
         now = time.time()
-        expired_keys = [
-            key for key, entry in self._cache.items()
-            if now > entry['expires_at']
-        ]
+        expired_keys = [key for key, entry in self._cache.items() if now > entry["expires_at"]]
         for key in expired_keys:
             del self._cache[key]
         return len(expired_keys)
@@ -98,11 +95,11 @@ class SimpleCache:
             Dictionary with cache stats
         """
         now = time.time()
-        active = sum(1 for entry in self._cache.values() if now <= entry['expires_at'])
+        active = sum(1 for entry in self._cache.values() if now <= entry["expires_at"])
         expired = len(self._cache) - active
 
         return {
-            'total_entries': len(self._cache),
-            'active_entries': active,
-            'expired_entries': expired,
+            "total_entries": len(self._cache),
+            "active_entries": active,
+            "expired_entries": expired,
         }

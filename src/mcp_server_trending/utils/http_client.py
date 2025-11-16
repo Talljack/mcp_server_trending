@@ -66,7 +66,7 @@ class HTTPClient:
         url: str,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> httpx.Response:
         """
         Perform GET request with retry logic.
@@ -94,10 +94,7 @@ class HTTPClient:
 
                 logger.debug(f"GET {full_url} (attempt {attempt + 1}/{self.max_retries})")
                 response = await client.get(
-                    full_url,
-                    params=params,
-                    headers=merged_headers,
-                    **kwargs
+                    full_url, params=params, headers=merged_headers, **kwargs
                 )
                 response.raise_for_status()
                 return response
@@ -105,7 +102,7 @@ class HTTPClient:
             except httpx.HTTPStatusError as e:
                 logger.warning(f"HTTP {e.response.status_code} for {full_url}")
                 if e.response.status_code == 429:  # Rate limited
-                    wait_time = self.retry_delay * (2 ** attempt)
+                    wait_time = self.retry_delay * (2**attempt)
                     logger.info(f"Rate limited, waiting {wait_time}s")
                     await asyncio.sleep(wait_time)
                     continue
@@ -129,7 +126,7 @@ class HTTPClient:
         url: str,
         params: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """
         Perform GET request and return JSON response.

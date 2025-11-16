@@ -3,12 +3,11 @@
 import sys
 import os
 import time
-import pytest
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from utils import SimpleCache
+from mcp_server_trending.utils import SimpleCache
 
 
 def test_cache_set_and_get():

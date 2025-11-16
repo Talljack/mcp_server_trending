@@ -5,7 +5,7 @@ import sys
 import os
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from fetchers import (
     GitHubTrendingFetcher,
@@ -21,10 +21,7 @@ async def example_github():
     async with GitHubTrendingFetcher() as fetcher:
         # Fetch trending Python repositories
         print("Fetching trending Python repositories...")
-        response = await fetcher.fetch_trending_repositories(
-            time_range="daily",
-            language="python"
-        )
+        response = await fetcher.fetch_trending_repositories(time_range="daily", language="python")
 
         if response.success:
             print(f"Found {len(response.data)} repositories\n")
@@ -49,7 +46,9 @@ async def example_hackernews():
             print(f"Found {len(response.data)} stories\n")
             for story in response.data[:5]:
                 print(f"{story.rank}. {story.title}")
-                print(f"   👤 by {story.author} | 📊 {story.score} points | 💬 {story.descendants} comments")
+                print(
+                    f"   👤 by {story.author} | 📊 {story.score} points | 💬 {story.descendants} comments"
+                )
                 print(f"   🔗 {story.url}\n")
         else:
             print(f"Error: {response.error}")

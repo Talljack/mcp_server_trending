@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from models.base import TrendingResponse
-from utils import HTTPClient, SimpleCache, logger
+from ..models.base import TrendingResponse
+from ..utils import HTTPClient, SimpleCache, logger
 
 
 class BaseFetcher(ABC):
@@ -77,7 +77,7 @@ class BaseFetcher(ABC):
         cached = self.cache.get(cache_key)
         if cached:
             logger.info(f"Cache hit for {cache_key}")
-            cached['cache_hit'] = True
+            cached["cache_hit"] = True
             return TrendingResponse(**cached)
         return None
 
@@ -125,11 +125,7 @@ class BaseFetcher(ABC):
         )
 
     async def fetch_with_cache(
-        self,
-        data_type: str,
-        fetch_func,
-        use_cache: bool = True,
-        **params
+        self, data_type: str, fetch_func, use_cache: bool = True, **params
     ) -> TrendingResponse:
         """
         Generic fetch method with caching support.

@@ -3,11 +3,12 @@
 import sys
 import os
 from datetime import datetime
+from dataclasses import dataclass
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from models import (
+from mcp_server_trending.models import (
     BaseModel,
     TrendingResponse,
     GitHubRepository,
@@ -20,6 +21,7 @@ from models import (
 def test_base_model_to_dict():
     """Test BaseModel to_dict conversion."""
 
+    @dataclass
     class TestModel(BaseModel):
         name: str
         value: int
@@ -34,11 +36,7 @@ def test_base_model_to_dict():
 def test_trending_response():
     """Test TrendingResponse model."""
     response = TrendingResponse(
-        success=True,
-        platform="github",
-        data_type="trending_repos",
-        data=[],
-        metadata={"count": 0}
+        success=True, platform="github", data_type="trending_repos", data=[], metadata={"count": 0}
     )
 
     assert response.success is True
@@ -64,7 +62,7 @@ def test_github_repository():
         stars=100,
         forks=20,
         stars_today=5,
-        built_by=["user1", "user2"]
+        built_by=["user1", "user2"],
     )
 
     assert repo.rank == 1
@@ -105,7 +103,7 @@ def test_hackernews_story():
         author="test_author",
         time=datetime.now(),
         descendants=50,
-        story_type="story"
+        story_type="story",
     )
 
     assert story.id == 12345
@@ -128,7 +126,7 @@ def test_producthunt_product():
         votes=100,
         comments_count=20,
         topics=["Developer Tools", "AI"],
-        makers=[]
+        makers=[],
     )
 
     assert product.name == "Test Product"
