@@ -345,7 +345,11 @@ class ProductHuntFetcher(BaseFetcher):
         logger.info("Using fallback Product Hunt data")
 
         placeholders = [
-            ("Configure Product Hunt API", "Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET", ["Setup"]),
+            (
+                "Configure Product Hunt API",
+                "Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET",
+                ["Setup"],
+            ),
             ("Get Credentials", "Visit https://www.producthunt.com/v2/oauth/applications", ["API"]),
             ("Create OAuth App", "Create a new application and get Client ID/Secret", ["OAuth"]),
             ("Set Environment Variables", "Add credentials to your .env file", ["Config"]),

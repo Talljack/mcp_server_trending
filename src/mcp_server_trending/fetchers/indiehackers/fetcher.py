@@ -55,7 +55,7 @@ class IndieHackersFetcher(BaseFetcher):
                 posts.append(
                     IndieHackersPost(
                         rank=i + 1,
-                        id=f"placeholder-{i+1}",
+                        id=f"placeholder-{i + 1}",
                         title=f"Visit Indie Hackers to see popular posts",
                         url=f"{self.base_url}/posts/popular/all-time",
                         content_preview=f"Indie Hackers uses Firebase client-side rendering. Please visit the website to browse posts.",
@@ -174,7 +174,11 @@ class IndieHackersFetcher(BaseFetcher):
                 website = product_data.get("website", "")
 
                 # Create product URL
-                product_url = f"{self.base_url}/product/{product_id}" if product_id else f"{self.base_url}/products"
+                product_url = (
+                    f"{self.base_url}/product/{product_id}"
+                    if product_id
+                    else f"{self.base_url}/products"
+                )
 
                 # Format revenue
                 if revenue and revenue > 0:

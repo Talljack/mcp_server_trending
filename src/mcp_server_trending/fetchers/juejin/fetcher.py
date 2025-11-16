@@ -137,25 +137,25 @@ class JuejinFetcher(BaseFetcher):
                 "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
             }
 
-            response = await self.http_client.get(
-                self.web_url, headers=headers
-            )
+            response = await self.http_client.get(self.web_url, headers=headers)
 
             if response.status_code != 200:
                 logger.warning(f"Web fetch returned status {response.status_code}")
                 return []
 
             # Parse HTML with BeautifulSoup
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.text, "html.parser")
 
             # Find __NUXT__ data (SSR data)
             nuxt_data = None
-            scripts = soup.find_all('script')
+            scripts = soup.find_all("script")
             for script in scripts:
-                if script.string and 'window.__NUXT__' in script.string:
+                if script.string and "window.__NUXT__" in script.string:
                     script_content = script.string
                     # Extract JSON from window.__NUXT__=...
-                    match = re.search(r'window\.__NUXT__\s*=\s*(\{.+\});', script_content, re.DOTALL)
+                    match = re.search(
+                        r"window\.__NUXT__\s*=\s*(\{.+\});", script_content, re.DOTALL
+                    )
                     if match:
                         try:
                             nuxt_data = json.loads(match.group(1))
@@ -177,9 +177,7 @@ class JuejinFetcher(BaseFetcher):
             logger.error(f"Web scraping failed: {e}", exc_info=True)
             return []
 
-    def _parse_nuxt_articles(
-        self, nuxt_data: dict[str, Any], limit: int
-    ) -> list[JuejinArticle]:
+    def _parse_nuxt_articles(self, nuxt_data: dict[str, Any], limit: int) -> list[JuejinArticle]:
         """Parse articles from __NUXT__ SSR data."""
         articles = []
         rank = 1
@@ -187,15 +185,15 @@ class JuejinFetcher(BaseFetcher):
         try:
             # Navigate through the NUXT data structure to find articles
             # The structure can vary, so we'll try common paths
-            state = nuxt_data.get('state', {}) or nuxt_data.get('data', [{}])[0] or {}
+            state = nuxt_data.get("state", {}) or nuxt_data.get("data", [{}])[0] or {}
 
             # Look for article feed data
             items = []
             for key, value in state.items():
                 if isinstance(value, dict):
                     # Look for feed data
-                    if 'feed' in key.lower() or 'list' in key.lower():
-                        feed_data = value.get('list', []) or value.get('data', [])
+                    if "feed" in key.lower() or "list" in key.lower():
+                        feed_data = value.get("list", []) or value.get("data", [])
                         if isinstance(feed_data, list) and feed_data:
                             items = feed_data
                             break
@@ -203,11 +201,11 @@ class JuejinFetcher(BaseFetcher):
             # If no items found in state, try other common locations
             if not items:
                 # Try fetch data
-                fetch = nuxt_data.get('fetch', {})
+                fetch = nuxt_data.get("fetch", {})
                 for value in fetch.values():
                     if isinstance(value, dict):
-                        data = value.get('data', {})
-                        items = data.get('data', []) or data.get('list', [])
+                        data = value.get("data", {})
+                        items = data.get("data", []) or data.get("list", [])
                         if items:
                             break
 
@@ -216,20 +214,20 @@ class JuejinFetcher(BaseFetcher):
             for item_data in items[:limit]:
                 try:
                     # The structure might vary, try to extract article info
-                    article_info = item_data.get('article_info', {}) or item_data
-                    author_info = item_data.get('author_user_info', {}) or {}
+                    article_info = item_data.get("article_info", {}) or item_data
+                    author_info = item_data.get("author_user_info", {}) or {}
 
-                    article_id = article_info.get('article_id') or item_data.get('id')
-                    title = article_info.get('title') or item_data.get('title')
+                    article_id = article_info.get("article_id") or item_data.get("id")
+                    title = article_info.get("title") or item_data.get("title")
 
                     if not article_id or not title:
                         continue
 
                     # Parse timestamps
                     created_at = None
-                    if 'ctime' in article_info and article_info['ctime']:
+                    if "ctime" in article_info and article_info["ctime"]:
                         try:
-                            created_at = datetime.fromtimestamp(int(article_info['ctime']))
+                            created_at = datetime.fromtimestamp(int(article_info["ctime"]))
                         except (ValueError, TypeError):
                             pass
 
@@ -238,15 +236,15 @@ class JuejinFetcher(BaseFetcher):
                         article_id=str(article_id),
                         title=title,
                         url=f"https://juejin.cn/post/{article_id}",
-                        brief_content=article_info.get('brief_content'),
-                        cover_image=article_info.get('cover_image'),
-                        user_id=author_info.get('user_id'),
-                        user_name=author_info.get('user_name'),
-                        avatar_large=author_info.get('avatar_large'),
-                        view_count=article_info.get('view_count', 0),
-                        digg_count=article_info.get('digg_count', 0),
-                        comment_count=article_info.get('comment_count', 0),
-                        collect_count=article_info.get('collect_count', 0),
+                        brief_content=article_info.get("brief_content"),
+                        cover_image=article_info.get("cover_image"),
+                        user_id=author_info.get("user_id"),
+                        user_name=author_info.get("user_name"),
+                        avatar_large=author_info.get("avatar_large"),
+                        view_count=article_info.get("view_count", 0),
+                        digg_count=article_info.get("digg_count", 0),
+                        comment_count=article_info.get("comment_count", 0),
+                        collect_count=article_info.get("collect_count", 0),
                         created_at=created_at,
                     )
 

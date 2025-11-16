@@ -171,7 +171,9 @@ class RedditFetcher(BaseFetcher):
                     domain=submission.domain,
                     flair=submission.link_flair_text,
                     is_video=submission.is_video,
-                    thumbnail_url=submission.thumbnail if submission.thumbnail.startswith("http") else None,
+                    thumbnail_url=submission.thumbnail
+                    if submission.thumbnail.startswith("http")
+                    else None,
                     distinguished=submission.distinguished,
                     stickied=submission.stickied,
                     over_18=submission.over_18,
@@ -201,7 +203,7 @@ class RedditFetcher(BaseFetcher):
                 posts.append(
                     RedditPost(
                         rank=i + 1,
-                        id=f"placeholder-{i+1}",
+                        id=f"placeholder-{i + 1}",
                         title=f"Visit Reddit to see r/{subreddit} hot posts",
                         url=f"{self.base_url}/r/{subreddit}/hot",
                         permalink=f"{self.base_url}/r/{subreddit}/hot",
@@ -282,13 +284,17 @@ class RedditFetcher(BaseFetcher):
                     **self.reddit_headers,
                     "Authorization": f"Bearer {token}",
                 }
-                logger.info(f"Fetching top posts from r/{subreddit} using OAuth (time_range={time_range})")
+                logger.info(
+                    f"Fetching top posts from r/{subreddit} using OAuth (time_range={time_range})"
+                )
             else:
                 # Fallback to public API
                 url = f"{self.public_api_url}/r/{subreddit}/top.json"
                 params = {"limit": limit, "t": time_range}
                 headers = self.reddit_headers
-                logger.info(f"Fetching top posts from r/{subreddit} using public API (time_range={time_range})")
+                logger.info(
+                    f"Fetching top posts from r/{subreddit} using public API (time_range={time_range})"
+                )
 
             response = await self.http_client.get(url, params=params, headers=headers)
             data = response.json()
@@ -318,7 +324,7 @@ class RedditFetcher(BaseFetcher):
                 posts.append(
                     RedditPost(
                         rank=i + 1,
-                        id=f"placeholder-{i+1}",
+                        id=f"placeholder-{i + 1}",
                         title=f"Visit Reddit to see r/{subreddit} top posts",
                         url=f"{self.base_url}/r/{subreddit}/top?t={time_range}",
                         permalink=f"{self.base_url}/r/{subreddit}/top?t={time_range}",
@@ -456,7 +462,11 @@ class RedditFetcher(BaseFetcher):
                 subreddit_name = subreddit_data.get("display_name")
 
                 # Filter out NSFW and quarantined subreddits
-                if subreddit_name and not subreddit_data.get("over18", False) and not subreddit_data.get("quarantine", False):
+                if (
+                    subreddit_name
+                    and not subreddit_data.get("over18", False)
+                    and not subreddit_data.get("quarantine", False)
+                ):
                     subreddits.append(subreddit_name)
 
             logger.info(f"Found {len(subreddits)} subreddits for query '{query}': {subreddits[:5]}")
@@ -518,8 +528,12 @@ class RedditFetcher(BaseFetcher):
                     topic_used, subreddits = matched_topics[0]
                 else:
                     # NEW: Search Reddit for relevant subreddits using keyword
-                    logger.info(f"No predefined match for '{topic_normalized}', searching Reddit...")
-                    searched_subreddits = await self.search_subreddits(query=topic_normalized, limit=10)
+                    logger.info(
+                        f"No predefined match for '{topic_normalized}', searching Reddit..."
+                    )
+                    searched_subreddits = await self.search_subreddits(
+                        query=topic_normalized, limit=10
+                    )
 
                     if searched_subreddits:
                         # Found subreddits via search

@@ -41,7 +41,9 @@ class ModelScopeFetcher(BaseFetcher):
         Returns:
             TrendingResponse with ModelScope models
         """
-        cache_key = f"models:page={page_number}:size={page_size}:sort={sort_by}:search={search_text}"
+        cache_key = (
+            f"models:page={page_number}:size={page_size}:sort={sort_by}:search={search_text}"
+        )
         return await self.fetch_with_cache(
             data_type=cache_key,
             fetch_func=self._fetch_models_internal,
@@ -237,9 +239,7 @@ class ModelScopeFetcher(BaseFetcher):
             logger.error(f"Error fetching ModelScope datasets: {e}")
             return self._create_response(success=False, data_type="datasets", data=[], error=str(e))
 
-    def _parse_models(
-        self, response_data: dict[str, Any], limit: int
-    ) -> list[ModelScopeModel]:
+    def _parse_models(self, response_data: dict[str, Any], limit: int) -> list[ModelScopeModel]:
         """Parse models from ModelScope API response."""
         models = []
         rank = 1
@@ -248,7 +248,9 @@ class ModelScopeFetcher(BaseFetcher):
             # Extract models from Data.Model.Models
             items = []
             if "Data" in response_data and isinstance(response_data["Data"], dict):
-                if "Model" in response_data["Data"] and isinstance(response_data["Data"]["Model"], dict):
+                if "Model" in response_data["Data"] and isinstance(
+                    response_data["Data"]["Model"], dict
+                ):
                     items = response_data["Data"]["Model"].get("Models", [])
 
             for item_data in items[:limit]:
@@ -304,7 +306,9 @@ class ModelScopeFetcher(BaseFetcher):
                         stars=item_data.get("Stars", 0),
                         tags=tags,
                         frameworks=frameworks,
-                        url=f"https://modelscope.cn/models/{namespace}/{name}" if namespace and name else f"https://modelscope.cn/models/{model_id}",
+                        url=f"https://modelscope.cn/models/{namespace}/{name}"
+                        if namespace and name
+                        else f"https://modelscope.cn/models/{model_id}",
                         gmt_create=created_time,
                         gmt_modified=last_updated,
                     )
@@ -321,9 +325,7 @@ class ModelScopeFetcher(BaseFetcher):
 
         return models
 
-    def _parse_datasets(
-        self, response_data: dict[str, Any], limit: int
-    ) -> list[ModelScopeDataset]:
+    def _parse_datasets(self, response_data: dict[str, Any], limit: int) -> list[ModelScopeDataset]:
         """Parse datasets from ModelScope API response."""
         datasets = []
         rank = 1
@@ -386,7 +388,9 @@ class ModelScopeFetcher(BaseFetcher):
                         stars=item_data.get("Stars", 0),
                         tags=tags,
                         task_categories=task_categories,
-                        url=f"https://modelscope.cn/datasets/{namespace}/{name}" if namespace and name else f"https://modelscope.cn/datasets/{dataset_id}",
+                        url=f"https://modelscope.cn/datasets/{namespace}/{name}"
+                        if namespace and name
+                        else f"https://modelscope.cn/datasets/{dataset_id}",
                         gmt_create=gmt_create,
                         gmt_modified=gmt_modified or last_updated,
                     )

@@ -133,7 +133,10 @@ class AIToolsFetcher(BaseFetcher):
             description = desc_elem.get_text(strip=True)
 
         # Try to find category/tags
-        tag_elements = element.find_all(["span", "a"], class_=lambda x: x and ("tag" in str(x).lower() or "category" in str(x).lower()))
+        tag_elements = element.find_all(
+            ["span", "a"],
+            class_=lambda x: x and ("tag" in str(x).lower() or "category" in str(x).lower()),
+        )
         for tag_elem in tag_elements:
             tag_text = tag_elem.get_text(strip=True)
             if tag_text:

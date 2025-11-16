@@ -66,7 +66,9 @@ class V2EXFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching V2EX hot topics: {e}")
-            return self._create_response(success=False, data_type="hot_topics", data=[], error=str(e))
+            return self._create_response(
+                success=False, data_type="hot_topics", data=[], error=str(e)
+            )
 
     async def fetch_latest_topics(
         self,
@@ -115,11 +117,11 @@ class V2EXFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching V2EX latest topics: {e}")
-            return self._create_response(success=False, data_type="latest_topics", data=[], error=str(e))
+            return self._create_response(
+                success=False, data_type="latest_topics", data=[], error=str(e)
+            )
 
-    def _parse_topics(
-        self, topics_data: list[dict[str, Any]], limit: int = 20
-    ) -> list[V2EXTopic]:
+    def _parse_topics(self, topics_data: list[dict[str, Any]], limit: int = 20) -> list[V2EXTopic]:
         """Parse topics from V2EX API response."""
         topics = []
         rank = 1

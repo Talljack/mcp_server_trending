@@ -19,7 +19,11 @@ async def test_all_platforms():
     server = TrendingMCPServer()
 
     tests = [
-        ("GitHub Trending", server.github_fetcher.fetch_trending_repositories, {"time_range": "daily"}),
+        (
+            "GitHub Trending",
+            server.github_fetcher.fetch_trending_repositories,
+            {"time_range": "daily"},
+        ),
         ("Hacker News", server.hackernews_fetcher.fetch_stories, {"story_type": "top", "limit": 3}),
         ("Product Hunt", server.producthunt_fetcher.fetch_products, {"time_range": "today"}),
         ("Indie Hackers", server.indiehackers_fetcher.fetch_popular_posts, {"limit": 3}),
@@ -52,15 +56,15 @@ async def test_all_platforms():
             print(f"❌ Error: {str(e)[:80]}")
             results["failed"].append((platform_name, str(e)))
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"✅ Successful: {len(results['success'])}/{len(tests)}")
     print(f"❌ Failed: {len(results['failed'])}/{len(tests)}")
-    
+
     if results["failed"]:
         print("\n⚠️  Failed platforms:")
         for platform, error in results["failed"]:
             print(f"  - {platform}: {error[:100]}")
-    
+
     await server.cleanup()
     print("\n✓ Cleanup complete")
 

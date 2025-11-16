@@ -159,7 +159,9 @@ class DevToFetcher(BaseFetcher):
                     organization_id=org_data.get("organization_id") if org_data else None,
                     organization_name=org_data.get("name") if org_data else None,
                     organization_username=org_data.get("username") if org_data else None,
-                    tags=article_data.get("tags", []) if isinstance(article_data.get("tags"), list) else [],
+                    tags=article_data.get("tags", [])
+                    if isinstance(article_data.get("tags"), list)
+                    else [],
                     tag_list=article_data.get("tag_list", []),
                     positive_reactions_count=article_data.get("positive_reactions_count", 0),
                     public_reactions_count=article_data.get("public_reactions_count", 0),

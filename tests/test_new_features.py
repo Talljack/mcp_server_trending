@@ -50,14 +50,10 @@ async def test_reddit_oauth():
         print("⚠️  Reddit OAuth credentials not configured (will use fallback)")
         print("   Configure REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET to test OAuth")
 
-    response = await fetcher.fetch_subreddit_hot(
-        subreddit="programming",
-        limit=3,
-        use_cache=False
-    )
+    response = await fetcher.fetch_subreddit_hot(subreddit="programming", limit=3, use_cache=False)
 
     if response.success and response.data:
-        method = response.metadata.get('method', 'unknown')
+        method = response.metadata.get("method", "unknown")
         print(f"✅ Success using {method}! Got {len(response.data)} posts")
 
         # Show posts

@@ -33,9 +33,7 @@ class HuggingFaceFetcher(BaseFetcher):
             None if token is configured or not required, warning response otherwise
         """
         if not self.api_token:
-            logger.warning(
-                "HuggingFace token not configured. Using public API with rate limits."
-            )
+            logger.warning("HuggingFace token not configured. Using public API with rate limits.")
         return None
 
     async def fetch_trending_models(
@@ -197,9 +195,7 @@ class HuggingFaceFetcher(BaseFetcher):
             logger.error(f"Error fetching HuggingFace datasets: {e}")
             return self._create_response(success=False, data_type="datasets", data=[], error=str(e))
 
-    def _parse_models(
-        self, models_data: list[dict[str, Any]], limit: int = 20
-    ) -> list[HFModel]:
+    def _parse_models(self, models_data: list[dict[str, Any]], limit: int = 20) -> list[HFModel]:
         """Parse models from HuggingFace API response."""
         models = []
         rank = 1

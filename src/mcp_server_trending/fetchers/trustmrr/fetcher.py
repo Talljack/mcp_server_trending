@@ -96,9 +96,7 @@ class TrustMRRFetcher(BaseFetcher):
 
         return projects[:limit]
 
-    def _parse_single_project(
-        self, element: BeautifulSoup, rank: int
-    ) -> TrustMRRProject | None:
+    def _parse_single_project(self, element: BeautifulSoup, rank: int) -> TrustMRRProject | None:
         """Parse a single project."""
         # Try to extract project info
         name = "Example Project"
@@ -122,15 +120,15 @@ class TrustMRRFetcher(BaseFetcher):
 
         text = element.get_text()
         mrr_patterns = [
-            r'\$([0-9,]+)\s*/?mo',
-            r'\$([0-9,]+)\s*MRR',
-            r'MRR[:\s]+\$([0-9,]+)',
+            r"\$([0-9,]+)\s*/?mo",
+            r"\$([0-9,]+)\s*MRR",
+            r"MRR[:\s]+\$([0-9,]+)",
         ]
 
         for pattern in mrr_patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                mrr_str = match.group(1).replace(',', '')
+                mrr_str = match.group(1).replace(",", "")
                 try:
                     mrr = float(mrr_str)
                     break

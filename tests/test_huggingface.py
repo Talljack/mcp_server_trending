@@ -24,9 +24,7 @@ async def test_huggingface_models():
     print("Test 1: Fetch trending models (sort by downloads)")
     print("-" * 60)
 
-    response = await fetcher.fetch_trending_models(
-        sort_by="downloads", limit=10, use_cache=False
-    )
+    response = await fetcher.fetch_trending_models(sort_by="downloads", limit=10, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Fetched {len(response.data)} models")
@@ -121,9 +119,7 @@ async def test_huggingface_datasets():
     print("Test 1: Fetch trending datasets (sort by downloads)")
     print("-" * 60)
 
-    response = await fetcher.fetch_trending_datasets(
-        sort_by="downloads", limit=10, use_cache=False
-    )
+    response = await fetcher.fetch_trending_datasets(sort_by="downloads", limit=10, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Fetched {len(response.data)} datasets")
