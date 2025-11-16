@@ -25,7 +25,7 @@ async def test_all_tools():
             "name": "get_github_trending_repos",
             "fetcher": server.github_fetcher,
             "method": "fetch_trending_repositories",
-            "kwargs": {"language": "python", "since": "daily"},
+            "kwargs": {"language": "python", "time_range": "daily"},
             "description": "GitHub Trending 仓库",
         },
         # Hacker News Tools
@@ -41,14 +41,14 @@ async def test_all_tools():
             "name": "get_producthunt_products",
             "fetcher": server.producthunt_fetcher,
             "method": "fetch_products",
-            "kwargs": {"time_range": "today", "limit": 3},
+            "kwargs": {"time_range": "today"},
             "description": "Product Hunt 产品",
         },
         # Indie Hackers Tools
         {
             "name": "get_indiehackers_popular",
             "fetcher": server.indiehackers_fetcher,
-            "method": "fetch_popular",
+            "method": "fetch_popular_posts",
             "kwargs": {"limit": 3},
             "description": "Indie Hackers 热门讨论",
         },
