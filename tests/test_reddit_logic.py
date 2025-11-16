@@ -45,9 +45,10 @@ async def test_search_logic():
     print("  Actual: Will use INDIE_SUBREDDITS")
     print()
 
-    # Verify headers are set
-    print("✓ Test 5: User-Agent header")
-    print(f"  Header set: {fetcher.reddit_headers}")
+    # Verify fetcher is initialized
+    print("✓ Test 5: Fetcher initialization")
+    print(f"  Base URL: {fetcher.base_url}")
+    print(f"  Platform: {fetcher.get_platform_name()}")
     print()
 
     # Verify error handling doesn't crash

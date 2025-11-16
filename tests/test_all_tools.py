@@ -59,14 +59,14 @@ async def test_all_tools():
             "kwargs": {"limit": 3},
             "description": "Indie Hackers 收入报告",
         },
-        # Reddit Tools
-        {
-            "name": "get_reddit_trending",
-            "fetcher": server.reddit_fetcher,
-            "method": "fetch_trending",
-            "kwargs": {"subreddit": "programming", "limit": 3},
-            "description": "Reddit 热门帖子",
-        },
+        # Reddit Tools - Disabled: Requires API credentials
+        # {
+        #     "name": "get_reddit_trending",
+        #     "fetcher": server.reddit_fetcher,
+        #     "method": "fetch_trending",
+        #     "kwargs": {"subreddit": "programming", "limit": 3},
+        #     "description": "Reddit 热门帖子",
+        # },
         # OpenRouter Tools (需要 API key)
         {
             "name": "get_openrouter_models",

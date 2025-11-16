@@ -75,11 +75,22 @@ class RedditFetcher(BaseFetcher):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.base_url = "https://www.reddit.com"
+        self.api_url = "https://oauth.reddit.com"
+        self.public_api_url = "https://www.reddit.com"
 
         # Reddit API credentials (optional)
         self.client_id = os.getenv("REDDIT_CLIENT_ID")
         self.client_secret = os.getenv("REDDIT_CLIENT_SECRET")
         self.reddit = None
+
+        # Reddit API headers
+        self.reddit_headers = {
+            "User-Agent": "mcp-server-trending/1.0 by indie_developers",
+        }
+
+        # OAuth token cache
+        self._access_token = None
+        self._token_expires_at = None
 
     def get_platform_name(self) -> str:
         """Get platform name."""
@@ -111,6 +122,57 @@ class RedditFetcher(BaseFetcher):
             )
 
         return self.reddit
+
+    async def _get_access_token(self) -> str | None:
+        """
+        Get OAuth access token for Reddit API.
+
+        Returns:
+            Access token string if credentials are configured, None otherwise
+        """
+        if not self.client_id or not self.client_secret:
+            return None
+
+        # Check if token is still valid
+        import time
+
+        if self._access_token and self._token_expires_at:
+            if time.time() < self._token_expires_at:
+                return self._access_token
+
+        # Request new token
+        try:
+            import base64
+
+            auth_string = f"{self.client_id}:{self.client_secret}"
+            auth_bytes = auth_string.encode("ascii")
+            auth_b64 = base64.b64encode(auth_bytes).decode("ascii")
+
+            token_url = "https://www.reddit.com/api/v1/access_token"
+            headers = {
+                "Authorization": f"Basic {auth_b64}",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "User-Agent": "mcp-server-trending/1.0 by indie_developers",
+            }
+            data = {"grant_type": "client_credentials"}
+
+            response = await self.http_client.post(token_url, data=data, headers=headers)
+            token_data = response.json()
+
+            if "access_token" in token_data:
+                self._access_token = token_data["access_token"]
+                # Token expires in 3600 seconds by default, refresh 5 minutes early
+                expires_in = token_data.get("expires_in", 3600)
+                self._token_expires_at = time.time() + expires_in - 300
+                logger.info("Successfully obtained Reddit OAuth token")
+                return self._access_token
+            else:
+                logger.warning(f"Failed to get Reddit OAuth token: {token_data}")
+                return None
+
+        except Exception as e:
+            logger.warning(f"Error getting Reddit OAuth token: {e}")
+            return None
 
     async def fetch_subreddit_hot(
         self,

@@ -47,7 +47,7 @@ class IndieHackersFetcher(BaseFetcher):
             # Indie Hackers uses Firebase + Ember.js client-side rendering
             # No server-side rendered content available for scraping
 
-            logger.info(f"Indie Hackers uses client-side rendering, returning placeholder data")
+            logger.info("Indie Hackers uses client-side rendering, returning placeholder data")
 
             # Return placeholder data with useful link
             posts = []
@@ -56,9 +56,9 @@ class IndieHackersFetcher(BaseFetcher):
                     IndieHackersPost(
                         rank=i + 1,
                         id=f"placeholder-{i + 1}",
-                        title=f"Visit Indie Hackers to see popular posts",
+                        title="Visit Indie Hackers to see popular posts",
                         url=f"{self.base_url}/posts/popular/all-time",
-                        content_preview=f"Indie Hackers uses Firebase client-side rendering. Please visit the website to browse posts.",
+                        content_preview="Indie Hackers uses Firebase client-side rendering. Please visit the website to browse posts.",
                         author="IndieHackers",
                         author_url=f"{self.base_url}",
                         upvotes=0,
@@ -137,7 +137,7 @@ class IndieHackersFetcher(BaseFetcher):
             # Use Firebase REST API to get products data
             firebase_url = "https://indie-hackers.firebaseio.com/products.json"
 
-            logger.info(f"Fetching Indie Hackers products from Firebase API")
+            logger.info("Fetching Indie Hackers products from Firebase API")
             response = await self.http_client.get(firebase_url)
             products_data = response.json()
 
@@ -167,11 +167,25 @@ class IndieHackersFetcher(BaseFetcher):
                     continue
 
                 # Get product details
-                name = product_data.get("name", "Unknown")
+                name = product_data.get("name", "").strip()
                 description = product_data.get("description", "")
                 revenue = product_data.get("selfReportedMonthlyRevenue", 0)
-                avatar_url = product_data.get("avatarUrl", "")
-                website = product_data.get("website", "")
+
+                # Validate product: must have a meaningful name
+                # Filter out products with only numbers or very short names
+                if not name or len(name) < 3:
+                    continue
+
+                # Filter out products that are just numbers (likely invalid entries)
+                if name.isdigit() or (len(name) <= 5 and name.replace("-", "").isdigit()):
+                    continue
+
+                # Filter out products with only punctuation or special characters
+                name_clean = (
+                    name.replace(".", "").replace(",", "").replace("-", "").replace("_", "").strip()
+                )
+                if len(name_clean) < 2:
+                    continue
 
                 # Create product URL
                 product_url = (

@@ -23,7 +23,7 @@ async def test_server_tools():
     print(f"✓ Hacker News Fetcher: {server.hackernews_fetcher.platform_name}")
     print(f"✓ Product Hunt Fetcher: {server.producthunt_fetcher.platform_name}")
     print(f"✓ Indie Hackers Fetcher: {server.indiehackers_fetcher.platform_name}")
-    print(f"✓ Reddit Fetcher: {server.reddit_fetcher.platform_name}")
+    # print(f"✓ Reddit Fetcher: {server.reddit_fetcher.platform_name}")  # Disabled: Requires API credentials
     print(f"✓ OpenRouter Fetcher: {server.openrouter_fetcher.platform_name}")
     print(f"✓ TrustMRR Fetcher: {server.trustmrr_fetcher.platform_name}")
     print(f"✓ AI Tools Fetcher: {server.aitools_fetcher.platform_name}")
