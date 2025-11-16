@@ -2,14 +2,14 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
 class BaseModel:
     """Base model for all data structures."""
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert model to dictionary."""
         result = {}
         for key, value in self.__dict__.items():
@@ -33,11 +33,11 @@ class TrendingResponse(BaseModel):
     data_type: str
     timestamp: datetime = field(default_factory=datetime.now)
     cache_hit: bool = False
-    data: List[Any] = field(default_factory=list)
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    error: Optional[str] = None
+    data: list[Any] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    error: str | None = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary with proper datetime formatting."""
         result = super().to_dict()
         # Ensure data items are properly serialized

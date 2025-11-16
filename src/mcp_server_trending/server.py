@@ -2,15 +2,22 @@
 
 import asyncio
 import sys
-from typing import Any, Dict, Optional
+from typing import Any
 
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp.types import Tool, TextContent
+from mcp.types import TextContent, Tool
 
 from . import __version__
 from .config import config
-from .fetchers import GitHubTrendingFetcher, HackerNewsFetcher, ProductHuntFetcher
+from .fetchers import (
+    GitHubTrendingFetcher,
+    HackerNewsFetcher,
+    IndieHackersFetcher,
+    OpenRouterFetcher,
+    ProductHuntFetcher,
+    RedditFetcher,
+)
 from .utils import SimpleCache, logger, setup_logger
 
 
@@ -32,6 +39,9 @@ class TrendingMCPServer:
         self.github_fetcher = GitHubTrendingFetcher(cache=self.cache)
         self.hackernews_fetcher = HackerNewsFetcher(cache=self.cache)
         self.producthunt_fetcher = ProductHuntFetcher(cache=self.cache)
+        self.indiehackers_fetcher = IndieHackersFetcher(cache=self.cache)
+        self.reddit_fetcher = RedditFetcher(cache=self.cache)
+        self.openrouter_fetcher = OpenRouterFetcher(cache=self.cache)
 
         # Register handlers
         self._register_handlers()
@@ -151,6 +161,186 @@ class TrendingMCPServer:
                         },
                     },
                 ),
+                # Indie Hackers Tools
+                Tool(
+                    name="get_indiehackers_popular",
+                    description="Get popular posts from Indie Hackers community.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of posts to fetch",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_indiehackers_income_reports",
+                    description="Get income reports from Indie Hackers. See revenue data and milestones from successful indie projects.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of reports to fetch",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Reddit Tools
+                Tool(
+                    name="get_reddit_trending",
+                    description="Get trending posts from specified subreddit. Popular subreddits: sideproject, entrepreneur, startups, saas, webdev, programming.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "subreddit": {
+                                "type": "string",
+                                "description": "Subreddit name (without r/), e.g., 'sideproject', 'entrepreneur'",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["hot", "top"],
+                                "default": "hot",
+                                "description": "Sort method for posts",
+                            },
+                            "time_range": {
+                                "type": "string",
+                                "enum": ["hour", "day", "week", "month", "year", "all"],
+                                "default": "day",
+                                "description": "Time range for trending posts",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 25,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of posts to fetch",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["subreddit"],
+                    },
+                ),
+                Tool(
+                    name="get_reddit_by_topic",
+                    description="Get trending posts by topic (intelligent subreddit selection). Supports topics like: ai, crypto, indie, startup, saas, programming, python, javascript, web, mobile, design, business, marketing, gaming, devops, security. If no topic specified, returns posts from indie developer communities.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "topic": {
+                                "type": "string",
+                                "description": "Topic keyword (e.g., 'ai', 'crypto', 'indie', 'startup'). Leave empty for default indie content.",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["hot", "top"],
+                                "default": "hot",
+                                "description": "Sort method for posts",
+                            },
+                            "time_range": {
+                                "type": "string",
+                                "enum": ["hour", "day", "week", "month", "year", "all"],
+                                "default": "day",
+                                "description": "Time range for trending posts",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Maximum total posts to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # OpenRouter Tools
+                Tool(
+                    name="get_openrouter_models",
+                    description="Get all available LLM models from OpenRouter with their specifications and pricing.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "description": "Maximum number of models to return (optional, returns all if not specified)",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_openrouter_popular",
+                    description="Get most popular LLM models on OpenRouter based on usage statistics.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_openrouter_best_value",
+                    description="Get best value LLM models on OpenRouter (best performance vs cost ratio).",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -195,6 +385,76 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # Indie Hackers Tools
+                elif name == "get_indiehackers_popular":
+                    response = await self.indiehackers_fetcher.fetch_popular_posts(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_indiehackers_income_reports":
+                    response = await self.indiehackers_fetcher.fetch_income_reports(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Reddit Tools
+                elif name == "get_reddit_trending":
+                    subreddit = arguments.get("subreddit")
+                    if not subreddit:
+                        raise ValueError("subreddit parameter is required")
+
+                    sort_by = arguments.get("sort_by", "hot")
+                    if sort_by == "hot":
+                        response = await self.reddit_fetcher.fetch_subreddit_hot(
+                            subreddit=subreddit,
+                            time_range=arguments.get("time_range", "day"),
+                            limit=arguments.get("limit", 25),
+                            use_cache=arguments.get("use_cache", True),
+                        )
+                    else:  # top
+                        response = await self.reddit_fetcher.fetch_subreddit_top(
+                            subreddit=subreddit,
+                            time_range=arguments.get("time_range", "week"),
+                            limit=arguments.get("limit", 25),
+                            use_cache=arguments.get("use_cache", True),
+                        )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_reddit_by_topic":
+                    response = await self.reddit_fetcher.fetch_by_topic(
+                        topic=arguments.get("topic"),  # None if not provided
+                        sort_by=arguments.get("sort_by", "hot"),
+                        time_range=arguments.get("time_range", "day"),
+                        max_total=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # OpenRouter Tools
+                elif name == "get_openrouter_models":
+                    response = await self.openrouter_fetcher.fetch_models(
+                        limit=arguments.get("limit"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_openrouter_popular":
+                    response = await self.openrouter_fetcher.fetch_popular_models(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_openrouter_best_value":
+                    response = await self.openrouter_fetcher.fetch_best_value_models(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -235,6 +495,9 @@ class TrendingMCPServer:
         await self.github_fetcher.close()
         await self.hackernews_fetcher.close()
         await self.producthunt_fetcher.close()
+        await self.indiehackers_fetcher.close()
+        await self.reddit_fetcher.close()
+        await self.openrouter_fetcher.close()
 
 
 async def main():
@@ -256,7 +519,7 @@ def cli_main():
     if len(sys.argv) > 1 and sys.argv[1] in ("--version", "-v"):
         print(f"mcp-server-trending {__version__}")
         sys.exit(0)
-    
+
     asyncio.run(main())
 
 

@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 from .base import BaseModel
 
@@ -14,7 +13,7 @@ class HackerNewsStory(BaseModel):
     rank: int
     id: int
     title: str
-    url: Optional[str]  # Can be None for Ask HN, etc.
+    url: str | None  # Can be None for Ask HN, etc.
     score: int
     author: str
     time: datetime

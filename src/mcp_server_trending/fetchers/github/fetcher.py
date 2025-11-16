@@ -1,13 +1,11 @@
 """GitHub Trending fetcher implementation."""
 
-from typing import List, Optional
-
 from bs4 import BeautifulSoup
 
-from ..base import BaseFetcher
 from ...models.base import TrendingResponse
 from ...models.github import GitHubDeveloper, GitHubRepository
 from ...utils import logger
+from ..base import BaseFetcher
 
 
 class GitHubTrendingFetcher(BaseFetcher):
@@ -22,8 +20,8 @@ class GitHubTrendingFetcher(BaseFetcher):
     async def fetch_trending_repositories(
         self,
         time_range: str = "daily",
-        language: Optional[str] = None,
-        spoken_language: Optional[str] = None,
+        language: str | None = None,
+        spoken_language: str | None = None,
         use_cache: bool = True,
     ) -> TrendingResponse:
         """
@@ -50,8 +48,8 @@ class GitHubTrendingFetcher(BaseFetcher):
     async def _fetch_repos_internal(
         self,
         time_range: str = "daily",
-        language: Optional[str] = None,
-        spoken_language: Optional[str] = None,
+        language: str | None = None,
+        spoken_language: str | None = None,
     ) -> TrendingResponse:
         """Internal method to fetch repositories."""
         try:
@@ -99,7 +97,7 @@ class GitHubTrendingFetcher(BaseFetcher):
                 error=str(e),
             )
 
-    def _parse_repositories(self, soup: BeautifulSoup) -> List[GitHubRepository]:
+    def _parse_repositories(self, soup: BeautifulSoup) -> list[GitHubRepository]:
         """Parse repository data from HTML."""
         repos = []
         articles = soup.find_all("article", class_="Box-row")
@@ -199,7 +197,7 @@ class GitHubTrendingFetcher(BaseFetcher):
     async def fetch_trending_developers(
         self,
         time_range: str = "daily",
-        language: Optional[str] = None,
+        language: str | None = None,
         use_cache: bool = True,
     ) -> TrendingResponse:
         """
@@ -224,7 +222,7 @@ class GitHubTrendingFetcher(BaseFetcher):
     async def _fetch_developers_internal(
         self,
         time_range: str = "daily",
-        language: Optional[str] = None,
+        language: str | None = None,
     ) -> TrendingResponse:
         """Internal method to fetch developers."""
         try:
@@ -266,7 +264,7 @@ class GitHubTrendingFetcher(BaseFetcher):
                 error=str(e),
             )
 
-    def _parse_developers(self, soup: BeautifulSoup) -> List[GitHubDeveloper]:
+    def _parse_developers(self, soup: BeautifulSoup) -> list[GitHubDeveloper]:
         """Parse developer data from HTML."""
         developers = []
         articles = soup.find_all("article", class_="Box-row")

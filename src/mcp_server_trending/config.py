@@ -2,7 +2,6 @@
 
 import os
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -14,11 +13,11 @@ class Config:
     cache_ttl: int = 3600  # 1 hour default
 
     # GitHub settings (optional - for authenticated requests with higher rate limits)
-    github_token: Optional[str] = None
+    github_token: str | None = None
 
     # Product Hunt settings (optional - for API access)
-    producthunt_api_key: Optional[str] = None
-    producthunt_api_secret: Optional[str] = None
+    producthunt_api_key: str | None = None
+    producthunt_api_secret: str | None = None
 
     # Rate limiting
     max_requests_per_minute: int = 60

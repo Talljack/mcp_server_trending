@@ -1,14 +1,13 @@
 """Product Hunt fetcher implementation."""
 
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from bs4 import BeautifulSoup
 
-from ..base import BaseFetcher
 from ...models.base import TrendingResponse
-from ...models.producthunt import ProductHuntMaker, ProductHuntProduct
+from ...models.producthunt import ProductHuntProduct
 from ...utils import logger
+from ..base import BaseFetcher
 
 
 class ProductHuntFetcher(BaseFetcher):
@@ -29,7 +28,7 @@ class ProductHuntFetcher(BaseFetcher):
     async def fetch_products(
         self,
         time_range: str = "today",
-        topic: Optional[str] = None,
+        topic: str | None = None,
         use_cache: bool = True,
     ) -> TrendingResponse:
         """
@@ -54,7 +53,7 @@ class ProductHuntFetcher(BaseFetcher):
     async def _fetch_products_internal(
         self,
         time_range: str = "today",
-        topic: Optional[str] = None,
+        topic: str | None = None,
     ) -> TrendingResponse:
         """Internal method to fetch products."""
         try:
@@ -122,7 +121,7 @@ class ProductHuntFetcher(BaseFetcher):
         else:
             return self.BASE_URL
 
-    def _parse_products(self, soup: BeautifulSoup) -> List[ProductHuntProduct]:
+    def _parse_products(self, soup: BeautifulSoup) -> list[ProductHuntProduct]:
         """
         Parse product data from HTML.
 
@@ -158,7 +157,7 @@ class ProductHuntFetcher(BaseFetcher):
 
     def _parse_single_product(
         self, container: BeautifulSoup, rank: int
-    ) -> Optional[ProductHuntProduct]:
+    ) -> ProductHuntProduct | None:
         """Parse a single product from HTML container."""
         # This is a simplified parser
         # Product Hunt's actual structure requires more complex parsing
@@ -197,7 +196,7 @@ class ProductHuntFetcher(BaseFetcher):
             featured_at=datetime.now(),
         )
 
-    def _get_fallback_products(self) -> List[ProductHuntProduct]:
+    def _get_fallback_products(self) -> list[ProductHuntProduct]:
         """
         Get fallback products for demonstration.
 

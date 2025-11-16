@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 from urllib.parse import urljoin
 
 import httpx
@@ -17,11 +17,11 @@ class HTTPClient:
 
     def __init__(
         self,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
         timeout: float = 10.0,
         max_retries: int = 3,
         retry_delay: float = 1.0,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
     ):
         """
         Initialize HTTP client.
@@ -38,7 +38,7 @@ class HTTPClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
         self.default_headers = headers or {}
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
         # Rate limiting
         self._last_request_time: float = 0
@@ -64,8 +64,8 @@ class HTTPClient:
     async def get(
         self,
         url: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         **kwargs,
     ) -> httpx.Response:
         """
@@ -124,10 +124,10 @@ class HTTPClient:
     async def get_json(
         self,
         url: str,
-        params: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Perform GET request and return JSON response.
 

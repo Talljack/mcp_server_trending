@@ -58,6 +58,21 @@ target-version = ['py310', 'py311', 'py312']
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+fix = true  # 启用自动修复
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes (包括 F401 未使用的导入)
+    "I",   # isort (自动排序导入)
+    "UP",  # pyupgrade
+]
+fixable = ["ALL"]  # 所有规则都可以自动修复
+# 忽略特定规则
+ignore = [
+    "E501",  # 行太长 - 描述字符串可以超过 100 字符
+]
 
 [tool.mypy]
 python_version = "3.10"
