@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 async def test_mcp_tools():
     """测试所有 MCP Tools"""
-    from server import TrendingMCPServer
+    from mcp_server_trending.server import TrendingMCPServer
 
     print("=" * 70)
     print("🧪 Cherry Studio MCP Server 功能测试")

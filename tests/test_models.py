@@ -3,11 +3,12 @@
 import sys
 import os
 from datetime import datetime
+from dataclasses import dataclass
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from models import (
+from mcp_server_trending.models import (
     BaseModel,
     TrendingResponse,
     GitHubRepository,
@@ -20,6 +21,7 @@ from models import (
 def test_base_model_to_dict():
     """Test BaseModel to_dict conversion."""
 
+    @dataclass
     class TestModel(BaseModel):
         name: str
         value: int
