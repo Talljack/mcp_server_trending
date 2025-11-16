@@ -12,14 +12,18 @@ from . import __version__
 from .config import config
 from .fetchers import (
     AIToolsFetcher,
+    DevToFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
     HuggingFaceFetcher,
     IndieHackersFetcher,
+    JuejinFetcher,
+    ModelScopeFetcher,
     OpenRouterFetcher,
     ProductHuntFetcher,
-    RedditFetcher,
+    # RedditFetcher,  # Disabled: Requires Reddit API credentials
     TrustMRRFetcher,
+    V2EXFetcher,
 )
 from .utils import SimpleCache, logger, setup_logger
 
@@ -43,11 +47,15 @@ class TrendingMCPServer:
         self.hackernews_fetcher = HackerNewsFetcher(cache=self.cache)
         self.producthunt_fetcher = ProductHuntFetcher(cache=self.cache)
         self.indiehackers_fetcher = IndieHackersFetcher(cache=self.cache)
-        self.reddit_fetcher = RedditFetcher(cache=self.cache)
+        # self.reddit_fetcher = RedditFetcher(cache=self.cache)  # Disabled: Requires credentials
         self.openrouter_fetcher = OpenRouterFetcher(cache=self.cache)
         self.trustmrr_fetcher = TrustMRRFetcher(cache=self.cache)
         self.aitools_fetcher = AIToolsFetcher(cache=self.cache)
         self.huggingface_fetcher = HuggingFaceFetcher(cache=self.cache)
+        self.v2ex_fetcher = V2EXFetcher(cache=self.cache)
+        self.juejin_fetcher = JuejinFetcher(cache=self.cache)
+        self.devto_fetcher = DevToFetcher(cache=self.cache)
+        self.modelscope_fetcher = ModelScopeFetcher(cache=self.cache)
 
         # Register handlers
         self._register_handlers()
@@ -191,7 +199,7 @@ class TrendingMCPServer:
                 ),
                 Tool(
                     name="get_indiehackers_income_reports",
-                    description="Get income reports from Indie Hackers. See revenue data and milestones from successful indie projects.",
+                    description="Get income reports from Indie Hackers with Stripe-verified revenue. Filter by category (ai, saas, marketplace, ecommerce) and sort by revenue or trending.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -202,81 +210,21 @@ class TrendingMCPServer:
                                 "maximum": 100,
                                 "description": "Number of reports to fetch",
                             },
-                            "use_cache": {
-                                "type": "boolean",
-                                "default": True,
-                                "description": "Whether to use cached data",
-                            },
-                        },
-                    },
-                ),
-                # Reddit Tools
-                Tool(
-                    name="get_reddit_trending",
-                    description="Get trending posts from specified subreddit. Popular subreddits: sideproject, entrepreneur, startups, saas, webdev, programming.",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "subreddit": {
+                            "category": {
                                 "type": "string",
-                                "description": "Subreddit name (without r/), e.g., 'sideproject', 'entrepreneur'",
+                                "description": "Filter by category: ai, saas, marketplace, ecommerce, content, community, etc.",
                             },
-                            "sort_by": {
+                            "sorting": {
                                 "type": "string",
-                                "enum": ["hot", "top"],
-                                "default": "hot",
-                                "description": "Sort method for posts",
+                                "enum": ["highest-revenue", "newest", "trending"],
+                                "default": "highest-revenue",
+                                "description": "Sort method for products",
                             },
-                            "time_range": {
+                            "revenue_verification": {
                                 "type": "string",
-                                "enum": ["hour", "day", "week", "month", "year", "all"],
-                                "default": "day",
-                                "description": "Time range for trending posts",
-                            },
-                            "limit": {
-                                "type": "integer",
-                                "default": 25,
-                                "minimum": 1,
-                                "maximum": 100,
-                                "description": "Number of posts to fetch",
-                            },
-                            "use_cache": {
-                                "type": "boolean",
-                                "default": True,
-                                "description": "Whether to use cached data",
-                            },
-                        },
-                        "required": ["subreddit"],
-                    },
-                ),
-                Tool(
-                    name="get_reddit_by_topic",
-                    description="Get trending posts by topic with intelligent subreddit selection. Supports 20+ predefined topics (ai, crypto, indie, startup, saas, programming, python, javascript, web, mobile, design, business, marketing, gaming, devops, security) AND automatic keyword search for ANY topic not in the list. Examples: 'ai', 'quantum computing', 'indie game development', 'sustainable agriculture'. If no topic specified, returns posts from indie developer communities.",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "topic": {
-                                "type": "string",
-                                "description": "Topic keyword or ANY search term. Predefined topics are faster and more reliable. Custom keywords will automatically search Reddit for relevant subreddits (may be slower and subject to network restrictions). Leave empty for default indie content.",
-                            },
-                            "sort_by": {
-                                "type": "string",
-                                "enum": ["hot", "top"],
-                                "default": "hot",
-                                "description": "Sort method for posts",
-                            },
-                            "time_range": {
-                                "type": "string",
-                                "enum": ["hour", "day", "week", "month", "year", "all"],
-                                "default": "day",
-                                "description": "Time range for trending posts",
-                            },
-                            "limit": {
-                                "type": "integer",
-                                "default": 50,
-                                "minimum": 1,
-                                "maximum": 100,
-                                "description": "Maximum total posts to return",
+                                "enum": ["stripe", "all"],
+                                "default": "stripe",
+                                "description": "Filter by revenue verification (stripe for verified only)",
                             },
                             "use_cache": {
                                 "type": "boolean",
@@ -286,6 +234,17 @@ class TrendingMCPServer:
                         },
                     },
                 ),
+                # Reddit Tools - Disabled: Requires Reddit API credentials
+                # Tool(
+                #     name="get_reddit_trending",
+                #     description="Get trending posts from specified subreddit.",
+                #     inputSchema={...},
+                # ),
+                # Tool(
+                #     name="get_reddit_by_topic",
+                #     description="Get trending posts by topic.",
+                #     inputSchema={...},
+                # ),
                 # OpenRouter Tools
                 Tool(
                     name="get_openrouter_models",
@@ -462,6 +421,149 @@ class TrendingMCPServer:
                         },
                     },
                 ),
+                # V2EX Tools
+                Tool(
+                    name="get_v2ex_hot_topics",
+                    description="Get hot topics from V2EX Chinese community. Popular discussions across various tech and creative topics.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of topics to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Juejin (掘金) Tools
+                Tool(
+                    name="get_juejin_articles",
+                    description="Get recommended articles from Juejin (掘金) Chinese tech community. Popular tech articles and tutorials.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of articles to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # dev.to Tools
+                Tool(
+                    name="get_devto_articles",
+                    description="Get articles from dev.to English developer community. Supports filtering by tags and time periods.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "per_page": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of articles per page",
+                            },
+                            "tag": {
+                                "type": "string",
+                                "description": "Filter by tag (e.g., 'python', 'javascript', 'webdev')",
+                            },
+                            "top": {
+                                "type": "integer",
+                                "description": "Get top articles (1=daily, 7=weekly, 30=monthly, 365=yearly)",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # ModelScope (魔塔社区) Tools
+                Tool(
+                    name="get_modelscope_models",
+                    description="Get trending models from ModelScope (魔塔社区) Chinese AI model platform. Popular ML models from Chinese community.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "page_size": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models per page",
+                            },
+                            "page_number": {
+                                "type": "integer",
+                                "default": 1,
+                                "minimum": 1,
+                                "description": "Page number",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "default": "Default",
+                                "description": "Sort by (Default, downloads, stars, etc.)",
+                            },
+                            "search_text": {
+                                "type": "string",
+                                "description": "Search text to filter models by name (e.g., 'GLM')",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_modelscope_datasets",
+                    description="Get trending datasets from ModelScope (魔塔社区) Chinese AI platform.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "page_size": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of datasets per page",
+                            },
+                            "page_number": {
+                                "type": "integer",
+                                "default": 1,
+                                "minimum": 1,
+                                "description": "Page number",
+                            },
+                            "target": {
+                                "type": "string",
+                                "default": "",
+                                "description": "Target filter (optional)",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -517,42 +619,45 @@ class TrendingMCPServer:
                 elif name == "get_indiehackers_income_reports":
                     response = await self.indiehackers_fetcher.fetch_income_reports(
                         limit=arguments.get("limit", 30),
+                        category=arguments.get("category"),
+                        sorting=arguments.get("sorting", "highest-revenue"),
+                        revenue_verification=arguments.get("revenue_verification", "stripe"),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
-                # Reddit Tools
-                elif name == "get_reddit_trending":
-                    subreddit = arguments.get("subreddit")
-                    if not subreddit:
-                        raise ValueError("subreddit parameter is required")
-
-                    sort_by = arguments.get("sort_by", "hot")
-                    if sort_by == "hot":
-                        response = await self.reddit_fetcher.fetch_subreddit_hot(
-                            subreddit=subreddit,
-                            time_range=arguments.get("time_range", "day"),
-                            limit=arguments.get("limit", 25),
-                            use_cache=arguments.get("use_cache", True),
-                        )
-                    else:  # top
-                        response = await self.reddit_fetcher.fetch_subreddit_top(
-                            subreddit=subreddit,
-                            time_range=arguments.get("time_range", "week"),
-                            limit=arguments.get("limit", 25),
-                            use_cache=arguments.get("use_cache", True),
-                        )
-                    return [TextContent(type="text", text=self._format_response(response))]
-
-                elif name == "get_reddit_by_topic":
-                    response = await self.reddit_fetcher.fetch_by_topic(
-                        topic=arguments.get("topic"),  # None if not provided
-                        sort_by=arguments.get("sort_by", "hot"),
-                        time_range=arguments.get("time_range", "day"),
-                        max_total=arguments.get("limit", 50),
-                        use_cache=arguments.get("use_cache", True),
-                    )
-                    return [TextContent(type="text", text=self._format_response(response))]
+                # Reddit Tools - Disabled: Requires Reddit API credentials
+                # elif name == "get_reddit_trending":
+                #     subreddit = arguments.get("subreddit")
+                #     if not subreddit:
+                #         raise ValueError("subreddit parameter is required")
+                #
+                #     sort_by = arguments.get("sort_by", "hot")
+                #     if sort_by == "hot":
+                #         response = await self.reddit_fetcher.fetch_subreddit_hot(
+                #             subreddit=subreddit,
+                #             time_range=arguments.get("time_range", "day"),
+                #             limit=arguments.get("limit", 25),
+                #             use_cache=arguments.get("use_cache", True),
+                #         )
+                #     else:  # top
+                #         response = await self.reddit_fetcher.fetch_subreddit_top(
+                #             subreddit=subreddit,
+                #             time_range=arguments.get("time_range", "week"),
+                #             limit=arguments.get("limit", 25),
+                #             use_cache=arguments.get("use_cache", True),
+                #         )
+                #     return [TextContent(type="text", text=self._format_response(response))]
+                #
+                # elif name == "get_reddit_by_topic":
+                #     response = await self.reddit_fetcher.fetch_by_topic(
+                #         topic=arguments.get("topic"),  # None if not provided
+                #         sort_by=arguments.get("sort_by", "hot"),
+                #         time_range=arguments.get("time_range", "day"),
+                #         max_total=arguments.get("limit", 50),
+                #         use_cache=arguments.get("use_cache", True),
+                #     )
+                #     return [TextContent(type="text", text=self._format_response(response))]
 
                 # OpenRouter Tools
                 elif name == "get_openrouter_models":
@@ -613,6 +718,52 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # V2EX Tools
+                elif name == "get_v2ex_hot_topics":
+                    response = await self.v2ex_fetcher.fetch_hot_topics(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Juejin Tools
+                elif name == "get_juejin_articles":
+                    response = await self.juejin_fetcher.fetch_recommended_articles(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # dev.to Tools
+                elif name == "get_devto_articles":
+                    response = await self.devto_fetcher.fetch_articles(
+                        per_page=arguments.get("per_page", 30),
+                        tag=arguments.get("tag"),
+                        top=arguments.get("top"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # ModelScope Tools
+                elif name == "get_modelscope_models":
+                    response = await self.modelscope_fetcher.fetch_models(
+                        page_number=arguments.get("page_number", 1),
+                        page_size=arguments.get("page_size", 20),
+                        sort_by=arguments.get("sort_by", "Default"),
+                        search_text=arguments.get("search_text"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_modelscope_datasets":
+                    response = await self.modelscope_fetcher.fetch_datasets(
+                        page_number=arguments.get("page_number", 1),
+                        page_size=arguments.get("page_size", 20),
+                        target=arguments.get("target", ""),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -654,11 +805,15 @@ class TrendingMCPServer:
         await self.hackernews_fetcher.close()
         await self.producthunt_fetcher.close()
         await self.indiehackers_fetcher.close()
-        await self.reddit_fetcher.close()
+        # await self.reddit_fetcher.close()  # Disabled: Requires Reddit API credentials
         await self.openrouter_fetcher.close()
         await self.trustmrr_fetcher.close()
         await self.aitools_fetcher.close()
         await self.huggingface_fetcher.close()
+        await self.v2ex_fetcher.close()
+        await self.juejin_fetcher.close()
+        await self.devto_fetcher.close()
+        await self.modelscope_fetcher.close()
 
 
 async def main():

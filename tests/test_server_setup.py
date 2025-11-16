@@ -28,6 +28,10 @@ async def test_server_tools():
     print(f"✓ TrustMRR Fetcher: {server.trustmrr_fetcher.platform_name}")
     print(f"✓ AI Tools Fetcher: {server.aitools_fetcher.platform_name}")
     print(f"✓ HuggingFace Fetcher: {server.huggingface_fetcher.platform_name}")
+    print(f"✓ V2EX Fetcher: {server.v2ex_fetcher.platform_name}")
+    print(f"✓ Juejin Fetcher: {server.juejin_fetcher.platform_name}")
+    print(f"✓ dev.to Fetcher: {server.devto_fetcher.platform_name}")
+    print(f"✓ ModelScope Fetcher: {server.modelscope_fetcher.platform_name}")
 
     print("\n所有组件初始化成功！")
     print("\nMCP Server 配置已添加到 Claude Desktop。")

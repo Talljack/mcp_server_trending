@@ -119,7 +119,7 @@ class HuggingFaceFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching HuggingFace models: {e}")
-            return self._create_response(success=False, data_type="models", error=str(e))
+            return self._create_response(success=False, data_type="models", data=[], error=str(e))
 
     async def fetch_trending_datasets(
         self,
@@ -195,7 +195,7 @@ class HuggingFaceFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching HuggingFace datasets: {e}")
-            return self._create_response(success=False, data_type="datasets", error=str(e))
+            return self._create_response(success=False, data_type="datasets", data=[], error=str(e))
 
     def _parse_models(
         self, models_data: list[dict[str, Any]], limit: int = 20

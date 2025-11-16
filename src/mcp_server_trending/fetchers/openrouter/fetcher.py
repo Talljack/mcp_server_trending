@@ -103,7 +103,7 @@ class OpenRouterFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching OpenRouter models: {e}")
-            return self._create_response(success=False, data_type="models", error=str(e))
+            return self._create_response(success=False, data_type="models", data=[], error=str(e))
 
     async def fetch_popular_models(
         self, limit: int = 20, use_cache: bool = True

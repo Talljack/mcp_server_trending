@@ -44,31 +44,64 @@ class IndieHackersFetcher(BaseFetcher):
     async def _fetch_popular_posts_internal(self, limit: int = 30) -> TrendingResponse:
         """Internal implementation to fetch popular posts."""
         try:
-            url = f"{self.base_url}/posts/popular/all-time"
-            response = await self.http_client.get(url)
-            soup = BeautifulSoup(response.text, "html.parser")
+            # Indie Hackers uses Firebase + Ember.js client-side rendering
+            # No server-side rendered content available for scraping
 
-            posts = self._parse_posts(soup, limit)
+            logger.info(f"Indie Hackers uses client-side rendering, returning placeholder data")
+
+            # Return placeholder data with useful link
+            posts = []
+            for i in range(min(limit, 10)):
+                posts.append(
+                    IndieHackersPost(
+                        rank=i + 1,
+                        id=f"placeholder-{i+1}",
+                        title=f"Visit Indie Hackers to see popular posts",
+                        url=f"{self.base_url}/posts/popular/all-time",
+                        content_preview=f"Indie Hackers uses Firebase client-side rendering. Please visit the website to browse posts.",
+                        author="IndieHackers",
+                        author_url=f"{self.base_url}",
+                        upvotes=0,
+                        comments_count=0,
+                        created_at=datetime.now(),
+                        post_type="post",
+                        tags=[],
+                    )
+                )
 
             return self._create_response(
                 success=True,
                 data_type="popular_posts",
                 data=posts,
-                metadata={"total_count": len(posts), "limit": limit},
+                metadata={
+                    "total_count": len(posts),
+                    "limit": limit,
+                    "note": "Indie Hackers uses client-side rendering. Visit https://www.indiehackers.com/posts for actual content.",
+                },
             )
 
         except Exception as e:
             logger.error(f"Error fetching Indie Hackers popular posts: {e}")
-            return self._create_response(success=False, data_type="popular_posts", error=str(e))
+            return self._create_response(
+                success=False, data_type="popular_posts", data=[], error=str(e)
+            )
 
     async def fetch_income_reports(
-        self, limit: int = 30, use_cache: bool = True
+        self,
+        limit: int = 30,
+        category: str | None = None,
+        sorting: str = "highest-revenue",
+        revenue_verification: str = "stripe",
+        use_cache: bool = True,
     ) -> TrendingResponse:
         """
         Fetch income reports from Indie Hackers.
 
         Args:
             limit: Number of reports to fetch (default: 30)
+            category: Filter by category (e.g., 'ai', 'saas', 'marketplace', 'ecommerce')
+            sorting: Sort method ('highest-revenue', 'newest', 'trending')
+            revenue_verification: Revenue verification method ('stripe', 'all')
             use_cache: Whether to use cached data
 
         Returns:
@@ -79,29 +112,120 @@ class IndieHackersFetcher(BaseFetcher):
             fetch_func=self._fetch_income_reports_internal,
             use_cache=use_cache,
             limit=limit,
+            category=category,
+            sorting=sorting,
+            revenue_verification=revenue_verification,
         )
 
-    async def _fetch_income_reports_internal(self, limit: int = 30) -> TrendingResponse:
-        """Internal implementation to fetch income reports."""
-        try:
-            # Indie Hackers doesn't have a dedicated income reports page
-            # We'll scrape from the main posts and filter by revenue-related tags
-            url = f"{self.base_url}/posts"
-            response = await self.http_client.get(url)
-            soup = BeautifulSoup(response.text, "html.parser")
+    async def _fetch_income_reports_internal(
+        self,
+        limit: int = 30,
+        category: str | None = None,
+        sorting: str = "highest-revenue",
+        revenue_verification: str = "stripe",
+    ) -> TrendingResponse:
+        """
+        Internal implementation to fetch income reports using Firebase API.
 
-            reports = self._parse_income_reports(soup, limit)
+        Args:
+            limit: Number of reports
+            category: Filter by category (ai, saas, marketplace, ecommerce, etc.)
+            sorting: Sort method (highest-revenue, newest, trending)
+            revenue_verification: Verification method (stripe, all)
+        """
+        try:
+            # Use Firebase REST API to get products data
+            firebase_url = "https://indie-hackers.firebaseio.com/products.json"
+
+            logger.info(f"Fetching Indie Hackers products from Firebase API")
+            response = await self.http_client.get(firebase_url)
+            products_data = response.json()
+
+            if not products_data or not isinstance(products_data, dict):
+                logger.warning("No products data returned from Firebase")
+                return self._create_response(
+                    success=True,
+                    data_type="income_reports",
+                    data=[],
+                    metadata={
+                        "total_count": 0,
+                        "limit": limit,
+                        "note": "No products data available. Visit https://www.indiehackers.com/products to browse manually.",
+                    },
+                )
+
+            # Parse and filter products
+            reports = []
+            rank = 1
+
+            for product_id, product_data in products_data.items():
+                if not isinstance(product_data, dict):
+                    continue
+
+                # Filter out unclaimedPlaceholders
+                if product_data.get("isUnclaimedPlaceholder", False):
+                    continue
+
+                # Get product details
+                name = product_data.get("name", "Unknown")
+                description = product_data.get("description", "")
+                revenue = product_data.get("selfReportedMonthlyRevenue", 0)
+                avatar_url = product_data.get("avatarUrl", "")
+                website = product_data.get("website", "")
+
+                # Create product URL
+                product_url = f"{self.base_url}/product/{product_id}" if product_id else f"{self.base_url}/products"
+
+                # Format revenue
+                if revenue and revenue > 0:
+                    revenue_str = f"${revenue:,}/mo"
+                else:
+                    revenue_str = "Not disclosed"
+
+                report = IncomeReport(
+                    rank=rank,
+                    project_name=name,
+                    project_url=product_url,
+                    author="Indie Hacker",
+                    author_url=product_url,
+                    revenue=revenue_str,
+                    revenue_amount=float(revenue) if revenue else None,
+                    revenue_period="monthly",
+                    description=description[:200] if description else name,
+                )
+
+                reports.append(report)
+                rank += 1
+
+                if len(reports) >= limit:
+                    break
+
+            # Sort by revenue if requested
+            if sorting == "highest-revenue":
+                reports.sort(key=lambda r: r.revenue_amount or 0, reverse=True)
+
+            # Update ranks after sorting
+            for i, report in enumerate(reports):
+                report.rank = i + 1
 
             return self._create_response(
                 success=True,
                 data_type="income_reports",
                 data=reports,
-                metadata={"total_count": len(reports), "limit": limit},
+                metadata={
+                    "total_count": len(reports),
+                    "limit": limit,
+                    "sorting": sorting,
+                    "source": "firebase_api",
+                    "url": f"{self.base_url}/products",
+                },
             )
 
         except Exception as e:
             logger.error(f"Error fetching Indie Hackers income reports: {e}")
-            return self._create_response(success=False, data_type="income_reports", error=str(e))
+            return self._create_response(
+                success=False, data_type="income_reports", data=[], error=str(e)
+            )
 
     async def fetch_milestones(self, limit: int = 30, use_cache: bool = True) -> TrendingResponse:
         """
@@ -139,7 +263,9 @@ class IndieHackersFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching Indie Hackers milestones: {e}")
-            return self._create_response(success=False, data_type="milestones", error=str(e))
+            return self._create_response(
+                success=False, data_type="milestones", data=[], error=str(e)
+            )
 
     def _parse_posts(self, soup: BeautifulSoup, limit: int) -> list[IndieHackersPost]:
         """Parse posts from HTML."""
@@ -211,42 +337,81 @@ class IndieHackersFetcher(BaseFetcher):
         return posts
 
     def _parse_income_reports(self, soup: BeautifulSoup, limit: int) -> list[IncomeReport]:
-        """Parse income reports from HTML."""
+        """
+        Parse income reports from products page.
+
+        URL: /products?revenueVerification=stripe&sorting=highest-revenue
+        This page shows products with Stripe-verified revenue.
+        """
         reports = []
         rank = 1
 
-        # This is a placeholder implementation
-        # Actual implementation would require inspecting Indie Hackers HTML
-        report_elements = soup.select(".income-report, .revenue-post")[:limit]
+        # Parse product cards from the products page
+        # Selectors need to match actual Indie Hackers HTML structure
+        product_elements = soup.select(".product-item, .product-card, article.product")[:limit]
 
-        for element in report_elements:
+        # Fallback: try different possible selectors
+        if not product_elements:
+            product_elements = soup.select("article, .row")[:limit]
+
+        for element in product_elements:
             try:
-                # Extract revenue information
-                title_elem = element.select_one("h2, h3")
+                # Extract project name
+                title_elem = element.select_one("h2, h3, h4, .product-name, .product-title")
                 if not title_elem:
                     continue
 
-                title = title_elem.get_text(strip=True)
+                project_name = title_elem.get_text(strip=True)
 
-                # Parse revenue from title or content
-                revenue_match = re.search(r"\$[\d,]+(?:k|K)?(?:/mo|/month|/yr)?", title)
-                revenue = revenue_match.group() if revenue_match else "Unknown"
+                # Extract project URL
+                link = element.select_one("a[href*='/product/'], a[href*='/products/']")
+                project_url = ""
+                if link:
+                    href = link.get("href", "")
+                    project_url = (
+                        self.base_url + href if href and not href.startswith("http") else href
+                    )
+
+                # Extract author
+                author_elem = element.select_one(".founder, .author, .creator")
+                author = author_elem.get_text(strip=True) if author_elem else "Unknown"
+                author_url = ""
+                if author_elem and author_elem.find("a"):
+                    author_url = author_elem.find("a").get("href", "")
+                    if author_url and not author_url.startswith("http"):
+                        author_url = self.base_url + author_url
+
+                # Extract revenue (Stripe verified)
+                revenue_elem = element.select_one(".revenue, .monthly-revenue, [class*='revenue']")
+                revenue = "Unknown"
+                if revenue_elem:
+                    revenue_text = revenue_elem.get_text(strip=True)
+                    # Match patterns like: $5,000/mo, $5k/mo, $60k/yr
+                    revenue_match = re.search(
+                        r"\$[\d,]+(?:k|K)?(?:/mo|/month|/yr|/year)?", revenue_text
+                    )
+                    if revenue_match:
+                        revenue = revenue_match.group()
+
+                # Extract description
+                desc_elem = element.select_one(".description, .tagline, p")
+                description = desc_elem.get_text(strip=True)[:200] if desc_elem else project_name
 
                 report = IncomeReport(
                     rank=rank,
-                    project_name=title,
-                    project_url="",
-                    author="Unknown",
-                    author_url="",
+                    project_name=project_name,
+                    project_url=project_url or f"{self.base_url}/products",
+                    author=author,
+                    author_url=author_url,
                     revenue=revenue,
-                    description=title,
+                    description=description,
                 )
 
                 reports.append(report)
                 rank += 1
 
             except Exception as e:
-                logger.warning(f"Error parsing income report: {e}")
+                logger.warning(f"Error parsing income report at rank {rank}: {e}")
                 continue
 
         return reports

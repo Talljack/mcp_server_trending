@@ -10,6 +10,10 @@ from .openrouter import LLMModel, ModelComparison, ModelRanking
 from .trustmrr import TrustMRRProject
 from .aitools import AITool
 from .huggingface import HFModel, HFDataset
+from .v2ex import V2EXTopic
+from .juejin import JuejinArticle
+from .devto import DevToArticle
+from .modelscope import ModelScopeModel, ModelScopeDataset
 
 __all__ = [
     "BaseModel",
@@ -34,4 +38,9 @@ __all__ = [
     "AITool",
     "HFModel",
     "HFDataset",
+    "V2EXTopic",
+    "JuejinArticle",
+    "DevToArticle",
+    "ModelScopeModel",
+    "ModelScopeDataset",
 ]
