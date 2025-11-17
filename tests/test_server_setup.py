@@ -32,6 +32,8 @@ async def test_server_tools():
     print(f"✓ Juejin Fetcher: {server.juejin_fetcher.platform_name}")
     print(f"✓ dev.to Fetcher: {server.devto_fetcher.platform_name}")
     print(f"✓ ModelScope Fetcher: {server.modelscope_fetcher.platform_name}")
+    print(f"✓ StackOverflow Fetcher: {server.stackoverflow_fetcher.platform_name}")
+    print(f"✓ Awesome Fetcher: {server.awesome_fetcher.platform_name}")
 
     print("\n所有组件初始化成功！")
     print("\nMCP Server 配置已添加到 Claude Desktop。")

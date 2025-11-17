@@ -92,6 +92,14 @@ async def test_all_tools():
             "kwargs": {"limit": 5},
             "description": "AI Tools Directory 热门工具",
         },
+        # Awesome Lists (新增)
+        {
+            "name": "get_awesome_lists",
+            "fetcher": server.awesome_fetcher,
+            "method": "fetch_awesome_lists",
+            "kwargs": {"limit": 5, "sort": "stars"},
+            "description": "GitHub Awesome Lists",
+        },
     ]
 
     results = {"success": [], "failed": [], "skipped": []}

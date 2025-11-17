@@ -14,6 +14,8 @@ from .v2ex import V2EXTopic
 from .juejin import JuejinArticle
 from .devto import DevToArticle
 from .modelscope import ModelScopeModel, ModelScopeDataset
+from .stackoverflow import StackOverflowTag, StackOverflowParams
+from .awesome import AwesomeList, AwesomeParams
 
 __all__ = [
     "BaseModel",
@@ -43,4 +45,8 @@ __all__ = [
     "DevToArticle",
     "ModelScopeModel",
     "ModelScopeDataset",
+    "StackOverflowTag",
+    "StackOverflowParams",
+    "AwesomeList",
+    "AwesomeParams",
 ]
