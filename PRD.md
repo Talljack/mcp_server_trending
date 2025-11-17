@@ -31,12 +31,14 @@
    - Job Stories (招聘信息)
    - 支持按评分和评论数排序
 
-2. **Reddit** ✅ 已实现 (占位数据)
+2. **Reddit** ✅ 已实现 (需要 OAuth 认证)
    - 支持任意 Subreddit 查询
    - 智能主题订阅（20+预定义主题）
    - 热门/Top排序，多时间范围筛选
    - 推荐子版块：r/SideProject, r/entrepreneur, r/startups, r/saas, r/programming, r/webdev
-   - ⚠️ 因API访问限制，当前返回占位数据及官网链接
+   - ⚠️ **必须配置 OAuth 认证**：自 2023 年 7 月起，Reddit API 要求所有请求必须使用 OAuth 认证
+   - 配置方式：设置 `REDDIT_CLIENT_ID` 和 `REDDIT_CLIENT_SECRET` 环境变量
+   - 未配置时返回占位数据及官网链接
 
 3. **dev.to** ✅ 已实现
    - 最新文章
@@ -70,11 +72,11 @@
    - 按分类筛选（Developer Tools, AI, SaaS等）
    - 产品发布和讨论
 
-8. **Indie Hackers** ✅ 已实现 (占位数据)
-    - 热门帖子 (Popular Posts)
-    - 收入报告 (Income Reports)
+8. **Indie Hackers** ✅ 已实现
+    - 热门帖子 (Popular Posts) - ✅ 有真实数据（通过 Firebase API，按回复数和浏览量排序）
+    - 收入报告 (Income Reports) - ✅ 有真实数据（通过 Firebase API）
     - 独立开发者社区
-    - ⚠️ 因使用客户端渲染，当前返回占位数据及官网链接
+    - 收入报告支持按分类筛选（category 参数，如 "ai"）
 
 9. **TrustMRR** ✅ 已实现
     - MRR/月收入排行榜
@@ -89,6 +91,7 @@
     - 最受欢迎模型
     - 最佳性价比模型
     - 模型规格和定价信息
+    - ⚠️ **必须配置 API Key**：所有 OpenRouter 工具都需要 `OPENROUTER_API_KEY`，未配置时返回错误提示
 
 11. **HuggingFace** ✅ 已实现（Token可选）
     - 热门ML模型（按下载/点赞/更新排序）
@@ -102,32 +105,59 @@
     - There's An AI For That 数据源
 
 **中文平台**
-13. **ModelScope (魔塔社区)** ✅ 已实现 (占位数据)
+13. **ModelScope (魔塔社区)** ✅ 已实现
     - 热门AI模型（按下载/点赞/更新排序）
     - 热门数据集
     - 中文AI模型社区
-    - ⚠️ 因API不可用，当前返回占位数据及官网链接
+    - ✅ 使用官方 API（PUT 方法调用 `/api/v1/dolphin/models` 和 `/api/v1/dolphin/datasets`）
+    - 支持搜索功能（search_text 参数）
+    - 支持分页查询
 
 ---
 
 ### 2.1.X 计划实现的平台（未来扩展）
 
-#### 设计与资源类
-- **Dribbble Trending** - 热门设计作品
-- **Behance Trending** - 热门创意项目
-
 #### 开发工具类
-- **DevHunt Rankings** - 开发工具排行
-- **Stack Overflow Trends** - 技术标签趋势
-
-#### 商业数据类
-- **Open Startup Rankings** - 按MRR和增长率排名
-- **MicroAcquire** - 项目交易数据
-- **Gumroad Top Creators** - 畅销创作者
+- **Stack Overflow Trends** ✅ 可实现 - 技术标签趋势
+  - 有公开 API：`https://api.stackexchange.com/2.3/tags`
+  - 支持按流行度、活动度排序
+  - 可以获取标签的问题数量、关注者等数据
 
 #### 社交媒体类
-- **BuildInPublic** - Twitter/X #BuildInPublic 动态
-- **Awesome Lists** - GitHub精选列表
+- **Awesome Lists** ✅ 可实现 - GitHub精选列表
+  - 通过 GitHub API 获取 awesome 主题仓库
+  - 可以获取 stars、forks、更新日期等
+  - 支持搜索和筛选
+
+#### 商业数据类
+- **Open Startup Rankings** ⚠️ 待验证 - 按MRR和增长率排名
+  - 网站可访问，但需要检查数据获取方式
+  - 可能需要网页抓取或寻找 API
+
+#### 设计与资源类
+- **Dribbble Trending** ❌ 不可用 - 热门设计作品
+  - API 返回 404，公开端点不可用
+  - 需要认证或官方 API（可能收费）
+- **Behance Trending** ❌ 不可用 - 热门创意项目
+  - API 返回 403，需要认证
+
+#### 开发工具类（其他）
+- **DevHunt Rankings** ❌ 不可用 - 开发工具排行
+  - 无公开 API，可能是 SPA
+  - 需要进一步研究数据获取方式
+
+#### 商业数据类（其他）
+- **MicroAcquire** ❌ 不可用 - 项目交易数据
+  - API 端点返回 404
+  - 可能需要认证或官方合作
+- **Gumroad Top Creators** ❌ 需要认证 - 畅销创作者
+  - API 需要认证（`https://api.gumroad.com/v2/products`）
+  - 需要 OAuth 或 API Key
+
+#### 社交媒体类（其他）
+- **BuildInPublic** ⚠️ 待研究 - Twitter/X #BuildInPublic 动态
+  - 需要 Twitter/X API（可能需要认证）
+  - 或使用第三方 Twitter 数据服务
 
 ## 3. 技术架构
 
@@ -223,17 +253,19 @@ mcp-server-trending/
 - `get_producthunt_products` ✅ - 获取产品（today, week, month）
 
 ### 4.4 Indie Hackers 相关 (2个工具)
-- `get_indiehackers_popular` ✅ - 获取热门帖子
-- `get_indiehackers_income_reports` ✅ - 获取收入报告
+- `get_indiehackers_popular` ✅ - 获取热门帖子（真实数据，通过 Firebase API，按回复数和浏览量排序）
+- `get_indiehackers_income_reports` ✅ - 获取收入报告（真实数据，支持按分类筛选，如 category="ai"）
 
-### 4.5 Reddit 相关 (2个工具)
-- `get_reddit_trending` ✅ - 获取指定 Subreddit 的热门帖子
+### 4.5 Reddit 相关 (2个工具) ⚠️ 需要 OAuth 认证
+- `get_reddit_trending` ✅ - 获取指定 Subreddit 的热门帖子（需要配置 `REDDIT_CLIENT_ID` 和 `REDDIT_CLIENT_SECRET`）
 - `get_reddit_by_topic` ✅ - 按主题智能选择 Subreddits（20+预定义主题+自动搜索）
+- ⚠️ **注意**: Reddit API 自 2023 年 7 月起要求所有请求必须使用 OAuth 认证，未配置时返回占位数据
 
-### 4.6 OpenRouter LLM 相关 (3个工具)
-- `get_openrouter_models` ✅ - 获取所有LLM模型列表
+### 4.6 OpenRouter LLM 相关 (3个工具) ⚠️ 需要 API Key
+- `get_openrouter_models` ✅ - 获取所有LLM模型列表（需要配置 `OPENROUTER_API_KEY`）
 - `get_openrouter_popular` ✅ - 获取最受欢迎模型
 - `get_openrouter_best_value` ✅ - 获取最佳性价比模型
+- ⚠️ **注意**: 所有 OpenRouter 工具都需要 API Key，未配置时返回错误提示和配置说明
 
 ### 4.7 TrustMRR 收入相关 (1个工具)
 - `get_trustmrr_rankings` ✅ - 获取 MRR/收入排行榜
@@ -255,16 +287,35 @@ mcp-server-trending/
 - `get_devto_articles` ✅ - 获取开发者文章（支持标签和时间筛选）
 
 ### 4.13 ModelScope (魔塔) 相关 (2个工具)
-- `get_modelscope_models` ✅ - 获取热门AI模型
-- `get_modelscope_datasets` ✅ - 获取热门数据集
+- `get_modelscope_models` ✅ - 获取热门AI模型（支持搜索、分页、排序）
+- `get_modelscope_datasets` ✅ - 获取热门数据集（支持分页、目标筛选）
 
 ---
 
 ### 计划中的工具（未来扩展）
-- `get_devhunt_today` - 获取今日最佳开发工具
-- `get_devhunt_week` - 获取本周最佳开发工具
+
+#### ✅ 可实现（推荐优先实现）
+- `get_stackoverflow_trends` - 获取 Stack Overflow 热门技术标签
+  - 使用 Stack Exchange API
+  - 支持按流行度、活动度排序
+  - 可以获取标签的问题数量、关注者等
+- `get_awesome_lists` - 获取 GitHub Awesome 列表
+  - 通过 GitHub API 搜索 awesome 主题仓库
+  - 支持按 stars、forks、更新时间排序
+  - 可以获取仓库描述、语言、标签等
+
+#### ⚠️ 待验证
 - `get_open_startup_rankings` - 获取公开创业公司收入排名
-- `get_gumroad_top_creators` - 获取 Gumroad 畅销创作者
+  - 需要进一步研究数据获取方式
+
+#### ❌ 不可用或需要认证
+- `get_devhunt_today` - 获取今日最佳开发工具（无公开 API）
+- `get_devhunt_week` - 获取本周最佳开发工具（无公开 API）
+- `get_gumroad_top_creators` - 获取 Gumroad 畅销创作者（需要 API Key）
+- `get_dribbble_trending` - 获取 Dribbble 热门设计（API 不可用）
+- `get_behance_trending` - 获取 Behance 热门项目（需要认证）
+
+#### 跨平台工具
 - `search_trending_all` - 跨平台搜索热门内容
 - `get_trending_summary` - 获取今日热门摘要（跨多个平台）
 
@@ -346,11 +397,12 @@ mcp-server-trending/
 ## 7. 配置与环境变量
 
 ```env
-# API Keys
-GITHUB_TOKEN=your_github_token
-REDDIT_CLIENT_ID=your_reddit_client_id
-REDDIT_CLIENT_SECRET=your_reddit_client_secret
-OPENROUTER_API_KEY=your_openrouter_key
+# API Keys (可选，但某些平台需要)
+GITHUB_TOKEN=your_github_token  # 可选，用于提高 GitHub API 限流
+REDDIT_CLIENT_ID=your_reddit_client_id  # 必需：Reddit API 必须使用 OAuth
+REDDIT_CLIENT_SECRET=your_reddit_client_secret  # 必需：Reddit API 必须使用 OAuth
+OPENROUTER_API_KEY=your_openrouter_key  # 必需：OpenRouter 工具需要 API Key
+HUGGINGFACE_TOKEN=your_huggingface_token  # 可选，用于提高 HuggingFace API 限流
 
 # Cache Configuration
 REDIS_HOST=localhost
@@ -467,15 +519,14 @@ AI: 调用 get_openrouter_rankings()
 ### 13.1 技术风险
 - **反爬虫机制**: 部分网站可能封禁爬虫 → 使用官方 API + 备用方案
   - ⚠️ **已知限制**：
-    - Reddit: 403 Blocked - 需要使用官方API或OAuth认证
-    - Linux.do: 403 Forbidden - 可能需要认证或特殊User-Agent
+    - Reddit: **必须使用 OAuth 认证** - 自 2023 年 7 月起，所有 API 请求都需要 OAuth token，公开 JSON 端点返回 403
+    - Linux.do: 已删除 - Cloudflare 保护，无法实现
 - **API 限流**: GitHub 等有 API 调用限制 → 添加缓存和智能重试
   - ✅ 已实现缓存机制（默认TTL: 1小时）
 - **数据结构变化**: 网站改版导致解析失败 → 版本锁定 + 自动告警
 - **API 端点问题**:
-  - ⚠️ ModelScope: API路径待确认（/api/v1/models返回404）
-  - ⚠️ SegmentFault: API路径待确认（/api/articles返回404）
-  - 💡 解决方案：考虑使用网页爬取或寻找正确的API文档
+  - ✅ ModelScope: 已解决 - 使用 PUT 方法调用 `/api/v1/dolphin/models` 和 `/api/v1/dolphin/datasets`
+  - ❌ SegmentFault: 已删除 - API 不可用
 
 ### 13.2 平台状态总结（最新测试结果）
 | 平台 | 状态 | 备注 |
@@ -483,20 +534,22 @@ AI: 调用 get_openrouter_rankings()
 | GitHub | ✅ 完全可用 | 18个仓库成功获取 |
 | Hacker News | ✅ 完全可用 | API稳定，数据完整 |
 | Product Hunt | ✅ 完全可用 | 使用fallback数据 |
-| Indie Hackers | ⚠️ 占位数据 | 客户端渲染，返回官网链接 |
-| Reddit | ⚠️ 占位数据 | API访问限制，返回官网链接 |
-| OpenRouter | ✅ 完全可用 | 需要API Key |
+| Indie Hackers | ✅ 完全可用 | Popular Posts 和 Income Reports 都有真实数据 |
+| Reddit | ⚠️ 需要认证 | **必须配置 OAuth**，未配置时返回占位数据 |
+| OpenRouter | ⚠️ 需要认证 | **必须配置 API Key**，未配置时返回错误提示 |
 | TrustMRR | ✅ 完全可用 | 数据稳定 |
 | AI Tools | ✅ 完全可用 | 数据稳定 |
 | HuggingFace | ✅ 完全可用 | Token可选，公开API可用 |
 | V2EX | ✅ 完全可用 | 中文社区数据稳定 |
 | Juejin | ✅ 完全可用 | API数据正常 |
 | dev.to | ✅ 完全可用 | API稳定 |
-| ModelScope | ⚠️ 占位数据 | API不可用，返回官网链接 |
+| ModelScope | ✅ 完全可用 | 使用官方 API（PUT 方法），支持搜索和分页 |
 
 **成功率**: 13/13 (100%) - 所有平台可正常使用
-- ✅ **10个完全可用**: GitHub, Hacker News, Product Hunt, OpenRouter, TrustMRR, AI Tools, HuggingFace, V2EX, Juejin, dev.to
-- ⚠️ **3个占位数据**: Indie Hackers, Reddit, ModelScope（返回官网链接，用户可访问完整内容）
+- ✅ **11个完全可用**: GitHub, Hacker News, Product Hunt, Indie Hackers, TrustMRR, AI Tools, HuggingFace, V2EX, Juejin, dev.to, ModelScope
+- ⚠️ **2个需要特殊配置**:
+  - Reddit: 需要 OAuth 认证（`REDDIT_CLIENT_ID` 和 `REDDIT_CLIENT_SECRET`），未配置时返回占位数据
+  - OpenRouter: 需要 API Key（`OPENROUTER_API_KEY`），未配置时返回错误提示
 - ❌ **已删除平台**: SegmentFault, Linux.do（无法实现）
 
 ### 13.3 法律风险
@@ -536,11 +589,17 @@ AI: 调用 get_openrouter_rankings()
 
 ---
 
-**文档版本**: v1.1
+**文档版本**: v1.2
 **创建日期**: 2025-11-15
 **最后更新**: 2025-11-16
 **文档维护者**: Project Team
 
 **更新日志**:
+- v1.2 (2025-11-16):
+  - ✅ ModelScope 已实现真实 API 调用（PUT 方法）
+  - ⚠️ Reddit 明确标注需要 OAuth 认证（自 2023 年 7 月起强制要求）
+  - ✅ Indie Hackers Popular Posts 已实现真实数据获取（通过 Firebase API）
+  - ✅ Indie Hackers Income Reports 有真实数据
+  - 📝 更新平台状态总结和配置说明
 - v1.1 (2025-11-16): 更新为13个平台，20个工具。删除 SegmentFault 和 Linux.do，修复所有平台，实现100%可用率
 - v1.0 (2025-11-15): 初始版本，15个平台，22个工具

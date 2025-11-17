@@ -14,6 +14,8 @@ from .v2ex import V2EXFetcher
 from .juejin import JuejinFetcher
 from .devto import DevToFetcher
 from .modelscope import ModelScopeFetcher
+from .stackoverflow import StackOverflowFetcher
+from .awesome import AwesomeFetcher
 
 __all__ = [
     "BaseFetcher",
@@ -30,4 +32,6 @@ __all__ = [
     "JuejinFetcher",
     "DevToFetcher",
     "ModelScopeFetcher",
+    "StackOverflowFetcher",
+    "AwesomeFetcher",
 ]

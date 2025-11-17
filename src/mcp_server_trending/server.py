@@ -12,6 +12,7 @@ from . import __version__
 from .config import config
 from .fetchers import (
     AIToolsFetcher,
+    AwesomeFetcher,
     DevToFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
@@ -22,6 +23,7 @@ from .fetchers import (
     OpenRouterFetcher,
     ProductHuntFetcher,
     # RedditFetcher,  # Disabled: Requires Reddit API credentials
+    StackOverflowFetcher,
     TrustMRRFetcher,
     V2EXFetcher,
 )
@@ -56,6 +58,8 @@ class TrendingMCPServer:
         self.juejin_fetcher = JuejinFetcher(cache=self.cache)
         self.devto_fetcher = DevToFetcher(cache=self.cache)
         self.modelscope_fetcher = ModelScopeFetcher(cache=self.cache)
+        self.stackoverflow_fetcher = StackOverflowFetcher(cache=self.cache)
+        self.awesome_fetcher = AwesomeFetcher(cache=self.cache)
 
         # Register handlers
         self._register_handlers()
@@ -564,6 +568,83 @@ class TrendingMCPServer:
                         },
                     },
                 ),
+                # Stack Overflow Tools
+                Tool(
+                    name="get_stackoverflow_trends",
+                    description="Get Stack Overflow trending tags. Shows popular technology tags with question counts and activity.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "sort": {
+                                "type": "string",
+                                "enum": ["popular", "activity", "name"],
+                                "default": "popular",
+                                "description": "Sort order: popular (by question count), activity (by last activity), name (alphabetical)",
+                            },
+                            "order": {
+                                "type": "string",
+                                "enum": ["desc", "asc"],
+                                "default": "desc",
+                                "description": "Sort direction",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of tags to fetch",
+                            },
+                            "site": {
+                                "type": "string",
+                                "default": "stackoverflow",
+                                "description": "Stack Exchange site (default: stackoverflow)",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Awesome Lists Tools
+                Tool(
+                    name="get_awesome_lists",
+                    description="Get Awesome Lists from GitHub. Curated lists of awesome resources organized by topic.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "sort": {
+                                "type": "string",
+                                "enum": ["stars", "forks", "updated"],
+                                "default": "stars",
+                                "description": "Sort order: stars, forks, or updated",
+                            },
+                            "order": {
+                                "type": "string",
+                                "enum": ["desc", "asc"],
+                                "default": "desc",
+                                "description": "Sort direction",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of awesome lists to fetch",
+                            },
+                            "language": {
+                                "type": "string",
+                                "description": "Filter by programming language (e.g., 'python', 'javascript')",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -764,6 +845,28 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # Stack Overflow Tools
+                elif name == "get_stackoverflow_trends":
+                    response = await self.stackoverflow_fetcher.fetch_tags(
+                        sort=arguments.get("sort", "popular"),
+                        order=arguments.get("order", "desc"),
+                        limit=arguments.get("limit", 30),
+                        site=arguments.get("site", "stackoverflow"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Awesome Lists Tools
+                elif name == "get_awesome_lists":
+                    response = await self.awesome_fetcher.fetch_awesome_lists(
+                        sort=arguments.get("sort", "stars"),
+                        order=arguments.get("order", "desc"),
+                        limit=arguments.get("limit", 30),
+                        language=arguments.get("language"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -814,6 +917,8 @@ class TrendingMCPServer:
         await self.juejin_fetcher.close()
         await self.devto_fetcher.close()
         await self.modelscope_fetcher.close()
+        await self.stackoverflow_fetcher.close()
+        await self.awesome_fetcher.close()
 
 
 async def main():

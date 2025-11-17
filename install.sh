@@ -50,6 +50,12 @@ echo "3️⃣  安装依赖包..."
 "$VENV_DIR/bin/pip" install -q -e "$PROJECT_DIR"
 echo "   ✅ 依赖安装完成"
 
+# 步骤 3.5: 安装 Playwright 浏览器
+echo ""
+echo "3.5️⃣ 安装 Playwright 浏览器..."
+"$VENV_DIR/bin/playwright" install chromium > /dev/null 2>&1
+echo "   ✅ Playwright 浏览器安装完成"
+
 # 步骤 4: 测试服务器
 echo ""
 echo "4️⃣  测试 MCP Server..."

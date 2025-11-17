@@ -42,41 +42,111 @@ class IndieHackersFetcher(BaseFetcher):
         )
 
     async def _fetch_popular_posts_internal(self, limit: int = 30) -> TrendingResponse:
-        """Internal implementation to fetch popular posts."""
+        """Internal implementation to fetch popular posts from Firebase API."""
         try:
-            # Indie Hackers uses Firebase + Ember.js client-side rendering
-            # No server-side rendered content available for scraping
+            # Use Firebase REST API to get posts data
+            firebase_url = "https://indie-hackers.firebaseio.com/posts.json"
 
-            logger.info("Indie Hackers uses client-side rendering, returning placeholder data")
+            logger.info(f"Fetching Indie Hackers posts from Firebase API")
+            response = await self.http_client.get(firebase_url)
 
-            # Return placeholder data with useful link
-            posts = []
-            for i in range(min(limit, 10)):
-                posts.append(
-                    IndieHackersPost(
-                        rank=i + 1,
-                        id=f"placeholder-{i + 1}",
-                        title="Visit Indie Hackers to see popular posts",
-                        url=f"{self.base_url}/posts/popular/all-time",
-                        content_preview="Indie Hackers uses Firebase client-side rendering. Please visit the website to browse posts.",
-                        author="IndieHackers",
-                        author_url=f"{self.base_url}",
-                        upvotes=0,
-                        comments_count=0,
-                        created_at=datetime.now(),
-                        post_type="post",
-                        tags=[],
-                    )
+            if response.status_code != 200:
+                logger.warning(f"Firebase API returned status {response.status_code}")
+                return self._create_response(
+                    success=False,
+                    data_type="popular_posts",
+                    data=[],
+                    error=f"HTTP {response.status_code}",
                 )
+
+            posts_data = response.json()
+
+            if not posts_data or not isinstance(posts_data, dict):
+                logger.warning("No posts data returned from Firebase")
+                return self._create_response(
+                    success=True,
+                    data_type="popular_posts",
+                    data=[],
+                    metadata={
+                        "total_count": 0,
+                        "limit": limit,
+                        "note": "No posts data available. Visit https://www.indiehackers.com/posts to browse manually.",
+                    },
+                )
+
+            # Parse and sort posts by popularity (numReplies + numViews)
+            posts_list = []
+            for post_id, post_data in posts_data.items():
+                if not isinstance(post_data, dict):
+                    continue
+
+                # Calculate popularity score
+                num_replies = post_data.get("numReplies", 0) or 0
+                num_views = post_data.get("numViews", 0) or 0
+                popularity_score = num_replies * 2 + num_views  # Weight replies more
+
+                posts_list.append(
+                    {
+                        "id": post_id,
+                        "data": post_data,
+                        "popularity": popularity_score,
+                    }
+                )
+
+            # Sort by popularity (descending)
+            posts_list.sort(key=lambda x: x["popularity"], reverse=True)
+
+            # Parse top posts
+            posts = []
+            for i, item in enumerate(posts_list[:limit], 1):
+                post_data = item["data"]
+                post_id = item["id"]
+
+                # Parse timestamp
+                created_at = None
+                if "createdTimestamp" in post_data and post_data["createdTimestamp"]:
+                    try:
+                        created_at = datetime.fromtimestamp(
+                            post_data["createdTimestamp"] / 1000
+                        )  # Firebase uses milliseconds
+                    except (ValueError, TypeError, OSError):
+                        pass
+
+                title = post_data.get("title", "Untitled")
+                body = post_data.get("body", "")
+                username = post_data.get("username", "Unknown")
+                group_name = post_data.get("groupName")
+
+                # Create post URL
+                post_url = f"{self.base_url}/post/{post_id}" if post_id else f"{self.base_url}/posts"
+                author_url = f"{self.base_url}/user/{username}" if username else f"{self.base_url}"
+
+                post = IndieHackersPost(
+                    rank=i,
+                    id=post_id,
+                    title=title,
+                    url=post_url,
+                    content_preview=body[:200] if body else "",
+                    author=username,
+                    author_url=author_url,
+                    upvotes=0,  # Indie Hackers doesn't have upvotes
+                    comments_count=post_data.get("numReplies", 0) or 0,
+                    created_at=created_at or datetime.now(),
+                    post_type=group_name.lower() if group_name else "post",
+                    tags=[group_name] if group_name else [],
+                )
+
+                posts.append(post)
 
             return self._create_response(
                 success=True,
                 data_type="popular_posts",
                 data=posts,
                 metadata={
-                    "total_count": len(posts),
+                    "total_count": len(posts_list),
                     "limit": limit,
-                    "note": "Indie Hackers uses client-side rendering. Visit https://www.indiehackers.com/posts for actual content.",
+                    "source": "firebase_api",
+                    "url": f"{self.base_url}/posts/popular/all-time",
                 },
             )
 
