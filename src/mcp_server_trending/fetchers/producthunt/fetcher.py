@@ -1,7 +1,7 @@
-"""Product Hunt fetcher implementation using official GraphQL API."""
+"""Product Hunt fetcher implementation using RSS feed."""
 
-import os
-from datetime import datetime
+import re
+from datetime import datetime, timedelta, timezone
 
 from ...models.base import TrendingResponse
 from ...models.producthunt import ProductHuntProduct
@@ -11,73 +11,80 @@ from ..base import BaseFetcher
 
 class ProductHuntFetcher(BaseFetcher):
     """
-    Fetcher for Product Hunt data using official GraphQL API.
+    Fetcher for Product Hunt data using public RSS feed.
 
-    Requires:
-    - PRODUCTHUNT_CLIENT_ID: Your Product Hunt app's Client ID
-    - PRODUCTHUNT_CLIENT_SECRET: Your Product Hunt app's Client Secret
+    No authentication required! Uses Product Hunt's public RSS feed.
 
-    Get credentials from: https://www.producthunt.com/v2/oauth/applications
+    Features:
+    - Product name, tagline, description
+    - Author/maker information
+    - Published date
+    - Product link
+
+    Limitations (RSS doesn't provide):
+    - Vote counts
+    - Comment counts
+    - Topics/tags
+    - Thumbnails
     """
 
     BASE_URL = "https://www.producthunt.com"
-    API_URL = "https://api.producthunt.com/v2/api/graphql"
-    TOKEN_URL = "https://api.producthunt.com/v2/oauth/token"
+    RSS_URL = "https://www.producthunt.com/feed"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.client_id = os.getenv("PRODUCTHUNT_CLIENT_ID")
-        self.client_secret = os.getenv("PRODUCTHUNT_CLIENT_SECRET")
-        self._access_token = None  # Cached access token
 
     def get_platform_name(self) -> str:
         """Get platform name."""
         return "producthunt"
 
-    async def _get_access_token(self) -> str | None:
+    def _parse_time_range(self, time_range: str) -> timedelta:
         """
-        Get access token using Client Credentials flow.
+        Parse time range string to timedelta.
+
+        Supports:
+        - "today" or "1day" -> 1 day
+        - "week" or "7days" -> 7 days
+        - "month" or "30days" -> 30 days
+        - "3days" -> 3 days
+        - "2weeks" -> 14 days
+
+        Args:
+            time_range: Time range string
 
         Returns:
-            Access token or None if credentials not configured
+            timedelta object
         """
-        # Return cached token if available
-        if self._access_token:
-            return self._access_token
+        # Normalize to lowercase
+        time_range = time_range.lower().strip()
 
-        # Check if credentials are configured
-        if not self.client_id or not self.client_secret:
-            logger.warning("Product Hunt credentials not configured")
-            return None
+        # Pre-defined mappings
+        mappings = {
+            "today": timedelta(days=1),
+            "week": timedelta(days=7),
+            "month": timedelta(days=30),
+        }
 
-        try:
-            logger.info("Fetching Product Hunt access token using Client Credentials")
+        if time_range in mappings:
+            return mappings[time_range]
 
-            token_data = {
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-                "grant_type": "client_credentials",
-            }
+        # Parse patterns like "3days", "2weeks", "1month"
+        # Match: number + (day|days|week|weeks|month|months)
+        match = re.match(r"(\d+)\s*(day|days|week|weeks|month|months)", time_range)
+        if match:
+            num = int(match.group(1))
+            unit = match.group(2)
 
-            response = await self.http_client.post(
-                self.TOKEN_URL,
-                json=token_data,
-                headers={"Content-Type": "application/json"},
-            )
+            if "day" in unit:
+                return timedelta(days=num)
+            elif "week" in unit:
+                return timedelta(weeks=num)
+            elif "month" in unit:
+                return timedelta(days=num * 30)
 
-            data = response.json()
-            self._access_token = data.get("access_token")
-
-            if self._access_token:
-                logger.info("Successfully obtained Product Hunt access token")
-                return self._access_token
-            else:
-                logger.error("No access_token in Product Hunt OAuth response")
-                return None
-
-        except Exception as e:
-            logger.error(f"Error fetching Product Hunt access token: {e}")
-            return None
+        # Default to 1 day
+        logger.warning(f"Unknown time range '{time_range}', defaulting to 1 day")
+        return timedelta(days=1)
 
     async def fetch_products(
         self,
@@ -86,11 +93,15 @@ class ProductHuntFetcher(BaseFetcher):
         use_cache: bool = True,
     ) -> TrendingResponse:
         """
-        Fetch Product Hunt products using GraphQL API.
+        Fetch Product Hunt products using RSS feed.
 
         Args:
-            time_range: Time range (today, week, month)
-            topic: Optional topic filter
+            time_range: Time range filter
+                - "today", "1day" -> last 24 hours
+                - "week", "7days" -> last 7 days
+                - "month", "30days" -> last 30 days
+                - Custom: "3days", "2weeks", etc.
+            topic: Optional topic filter (not supported by RSS)
             use_cache: Whether to use cache
 
         Returns:
@@ -98,280 +109,132 @@ class ProductHuntFetcher(BaseFetcher):
         """
         return await self.fetch_with_cache(
             data_type=f"products_{time_range}",
-            fetch_func=self._fetch_products_internal,
+            fetch_func=self._fetch_products_from_rss,
             use_cache=use_cache,
             time_range=time_range,
             topic=topic,
         )
 
-    async def _fetch_products_internal(
+    async def _fetch_products_from_rss(
         self,
         time_range: str = "today",
         topic: str | None = None,
     ) -> TrendingResponse:
-        """Internal method to fetch products via GraphQL API."""
+        """
+        Fetch products from Product Hunt RSS feed.
+
+        Args:
+            time_range: Time range filter
+            topic: Optional topic filter (not supported)
+
+        Returns:
+            TrendingResponse with product data
+        """
         try:
-            # Get access token
-            access_token = await self._get_access_token()
+            import xml.etree.ElementTree as ET
 
-            if not access_token:
-                logger.warning("Product Hunt API credentials not configured")
-                return self._create_response(
-                    success=True,
-                    data_type=f"products_{time_range}",
-                    data=self._get_fallback_products(),
-                    metadata={
-                        "total_count": 5,
-                        "time_range": time_range,
-                        "source": "placeholder",
-                        "note": "Product Hunt API credentials not configured. Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET environment variables. Get credentials from: https://www.producthunt.com/v2/oauth/applications",
-                    },
-                )
+            # Parse time range
+            time_delta = self._parse_time_range(time_range)
+            cutoff = datetime.now(timezone.utc) - time_delta
 
-            # Build GraphQL query
-            query = self._build_graphql_query(time_range, topic)
+            logger.info(f"Fetching Product Hunt products from RSS (time_range={time_range}, cutoff={cutoff.strftime('%Y-%m-%d %H:%M')})")
 
-            # Set authorization header
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            }
-
-            # Make GraphQL request
-            logger.info(f"Fetching Product Hunt products via API (time_range={time_range})")
-            response = await self.http_client.post(
-                self.API_URL,
-                json={"query": query},
-                headers=headers,
+            response = await self.http_client.get(
+                self.RSS_URL,
+                headers={"User-Agent": "Mozilla/5.0"}
             )
 
-            data = response.json()
+            root = ET.fromstring(response.text)
+            ns = {'atom': 'http://www.w3.org/2005/Atom'}
 
-            # Check for GraphQL errors
-            if "errors" in data:
-                error_msg = data["errors"][0].get("message", "Unknown GraphQL error")
-                logger.error(f"Product Hunt API error: {error_msg}")
-                return self._create_response(
-                    success=False,
-                    data_type=f"products_{time_range}",
-                    data=[],
-                    error=error_msg,
-                )
+            entries = root.findall('atom:entry', ns)
+            products = []
 
-            # Extract products from response
-            products = self._parse_graphql_response(data)
+            for entry in entries:
+                try:
+                    # Parse published date first
+                    published_elem = entry.find('atom:published', ns)
+                    if published_elem is None or not published_elem.text:
+                        continue
 
-            # Filter by topic if specified
-            if topic:
-                products = [
-                    p for p in products if any(topic.lower() in t.lower() for t in p.topics)
-                ]
+                    published_text = published_elem.text
+                    published_date = datetime.fromisoformat(
+                        published_text.replace('Z', '+00:00')
+                    )
 
-            logger.info(f"Successfully fetched {len(products)} products from Product Hunt API")
+                    # Filter by time range
+                    if published_date < cutoff:
+                        continue
 
-            metadata = {
-                "total_count": len(products),
-                "time_range": time_range,
-                "topic": topic,
-                "source": "graphql_api",
-            }
+                    # Extract product info
+                    title_elem = entry.find('atom:title', ns)
+                    link_elem = entry.find('atom:link[@rel="alternate"]', ns)
+                    content_elem = entry.find('atom:content', ns)
+                    author_elem = entry.find('atom:author/atom:name', ns)
+
+                    title = title_elem.text.strip() if title_elem is not None else "Unknown"
+                    url = link_elem.get('href') if link_elem is not None else ""
+
+                    # Extract tagline from content
+                    tagline = ""
+                    if content_elem is not None and content_elem.text:
+                        # Parse HTML content to extract tagline
+                        content_html = content_elem.text
+                        # Extract text between <p> tags
+                        match = re.search(r'<p>\s*([^<]+)\s*</p>', content_html)
+                        if match:
+                            tagline = match.group(1).strip()
+
+                    author = author_elem.text if author_elem is not None else "Unknown"
+
+                    product = ProductHuntProduct(
+                        rank=len(products) + 1,
+                        name=title,
+                        tagline=tagline,
+                        description=tagline,  # RSS doesn't have full description
+                        url=url,
+                        product_url=url,
+                        votes=0,  # RSS doesn't include vote count
+                        comments_count=0,  # RSS doesn't include comment count
+                        thumbnail=None,  # RSS doesn't include thumbnails
+                        topics=[],  # RSS doesn't include topics
+                        makers=[author] if author != "Unknown" else [],
+                        featured_at=published_date,
+                    )
+
+                    products.append(product)
+
+                    # Limit to 20 products
+                    if len(products) >= 20:
+                        break
+
+                except Exception as e:
+                    logger.warning(f"Error parsing RSS entry: {e}")
+                    continue
+
+            logger.info(f"Successfully fetched {len(products)} products from RSS feed (time_range={time_range})")
 
             return self._create_response(
                 success=True,
                 data_type=f"products_{time_range}",
                 data=products,
-                metadata=metadata,
+                metadata={
+                    "total_count": len(products),
+                    "time_range": time_range,
+                    "time_delta_days": time_delta.days,
+                    "source": "rss_feed",
+                    "note": f"Using RSS feed (no authentication required). Showing products from the last {time_range}.",
+                },
             )
 
         except Exception as e:
-            logger.error(f"Error fetching Product Hunt products: {e}", exc_info=True)
+            logger.error(f"Error fetching from RSS feed: {e}", exc_info=True)
             return self._create_response(
                 success=False,
                 data_type=f"products_{time_range}",
                 data=[],
                 error=str(e),
             )
-
-    def _build_graphql_query(self, time_range: str = "today", topic: str | None = None) -> str:
-        """
-        Build GraphQL query for fetching products.
-
-        Args:
-            time_range: Time range filter
-            topic: Optional topic filter
-
-        Returns:
-            GraphQL query string
-        """
-        # Determine ordering based on time range
-        order_map = {
-            "today": "RANKING",
-            "week": "VOTES",
-            "month": "VOTES",
-        }
-        order = order_map.get(time_range, "RANKING")
-
-        # Build topic filter if provided
-        topic_filter = f', topic: "{topic}"' if topic else ""
-
-        # GraphQL query
-        query = f"""
-        {{
-          posts(first: 20, order: {order}{topic_filter}) {{
-            edges {{
-              node {{
-                id
-                name
-                tagline
-                description
-                url
-                website
-                votesCount
-                commentsCount
-                featuredAt
-                thumbnail {{
-                  url
-                }}
-                topics {{
-                  edges {{
-                    node {{
-                      name
-                    }}
-                  }}
-                }}
-                makers {{
-                  edges {{
-                    node {{
-                      name
-                      username
-                    }}
-                  }}
-                }}
-              }}
-            }}
-          }}
-        }}
-        """
-
-        return query
-
-    def _parse_graphql_response(self, data: dict) -> list[ProductHuntProduct]:
-        """
-        Parse GraphQL response into ProductHuntProduct objects.
-
-        Args:
-            data: GraphQL response data
-
-        Returns:
-            List of ProductHuntProduct objects
-        """
-        products = []
-
-        try:
-            edges = data.get("data", {}).get("posts", {}).get("edges", [])
-
-            for rank, edge in enumerate(edges, 1):
-                try:
-                    node = edge.get("node", {})
-
-                    # Extract topics
-                    topics = []
-                    topic_edges = node.get("topics", {}).get("edges", [])
-                    for topic_edge in topic_edges:
-                        topic_name = topic_edge.get("node", {}).get("name")
-                        if topic_name:
-                            topics.append(topic_name)
-
-                    # Extract makers
-                    makers = []
-                    maker_edges = node.get("makers", {}).get("edges", [])
-                    for maker_edge in maker_edges:
-                        maker_node = maker_edge.get("node", {})
-                        maker_name = maker_node.get("name") or maker_node.get("username")
-                        if maker_name:
-                            makers.append(maker_name)
-
-                    # Get thumbnail URL
-                    thumbnail_url = None
-                    thumbnail = node.get("thumbnail")
-                    if thumbnail:
-                        thumbnail_url = thumbnail.get("url")
-
-                    # Parse featured date
-                    featured_at = datetime.now()
-                    if node.get("featuredAt"):
-                        try:
-                            # Product Hunt returns ISO 8601 format
-                            featured_at = datetime.fromisoformat(
-                                node["featuredAt"].replace("Z", "+00:00")
-                            )
-                        except Exception as e:
-                            logger.warning(f"Error parsing featuredAt date: {e}")
-
-                    product = ProductHuntProduct(
-                        rank=rank,
-                        name=node.get("name", "Unknown"),
-                        tagline=node.get("tagline", ""),
-                        description=node.get("description", ""),
-                        url=node.get("url", ""),
-                        product_url=node.get("website", ""),
-                        votes=node.get("votesCount", 0),
-                        comments_count=node.get("commentsCount", 0),
-                        thumbnail=thumbnail_url,
-                        topics=topics,
-                        makers=makers,
-                        featured_at=featured_at,
-                    )
-
-                    products.append(product)
-
-                except Exception as e:
-                    logger.warning(f"Error parsing product at rank {rank}: {e}")
-                    continue
-
-        except Exception as e:
-            logger.error(f"Error parsing GraphQL response: {e}")
-
-        return products
-
-    def _get_fallback_products(self) -> list[ProductHuntProduct]:
-        """
-        Get fallback products when API credentials not configured.
-
-        Returns:
-            List with placeholder products
-        """
-        logger.info("Using fallback Product Hunt data")
-
-        placeholders = [
-            (
-                "Configure Product Hunt API",
-                "Set PRODUCTHUNT_CLIENT_ID and PRODUCTHUNT_CLIENT_SECRET",
-                ["Setup"],
-            ),
-            ("Get Credentials", "Visit https://www.producthunt.com/v2/oauth/applications", ["API"]),
-            ("Create OAuth App", "Create a new application and get Client ID/Secret", ["OAuth"]),
-            ("Set Environment Variables", "Add credentials to your .env file", ["Config"]),
-            ("Enjoy Real Data", "Restart server to fetch real Product Hunt data", ["Success"]),
-        ]
-
-        return [
-            ProductHuntProduct(
-                rank=i,
-                name=name,
-                tagline=tagline,
-                description=f"{tagline}. Get your API credentials from Product Hunt to access real trending products.",
-                url=self.BASE_URL,
-                product_url="https://www.producthunt.com/v2/oauth/applications",
-                votes=0,
-                comments_count=0,
-                topics=topics,
-                makers=["Product Hunt"],
-                featured_at=datetime.now(),
-            )
-            for i, (name, tagline, topics) in enumerate(placeholders, 1)
-        ]
 
     async def fetch_today(self, use_cache: bool = True) -> TrendingResponse:
         """Convenience method for today's products."""

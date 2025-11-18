@@ -16,6 +16,16 @@ from .devto import DevToFetcher
 from .modelscope import ModelScopeFetcher
 from .stackoverflow import StackOverflowFetcher
 from .awesome import AwesomeFetcher
+from .vscode import VSCodeMarketplaceFetcher
+from .npm import NPMFetcher
+from .chrome import ChromeWebStoreFetcher
+from .pypi import PyPIFetcher
+from .remoteok import RemoteOKFetcher
+from .wordpress import WordPressFetcher
+from .aggregation import AggregationFetcher
+from .arxiv import ArxivFetcher
+from .semanticscholar import SemanticScholarFetcher
+from .openreview import OpenReviewFetcher
 
 __all__ = [
     "BaseFetcher",
@@ -34,4 +44,14 @@ __all__ = [
     "ModelScopeFetcher",
     "StackOverflowFetcher",
     "AwesomeFetcher",
+    "VSCodeMarketplaceFetcher",
+    "NPMFetcher",
+    "ChromeWebStoreFetcher",
+    "PyPIFetcher",
+    "RemoteOKFetcher",
+    "WordPressFetcher",
+    "AggregationFetcher",
+    "ArxivFetcher",
+    "SemanticScholarFetcher",
+    "OpenReviewFetcher",
 ]
