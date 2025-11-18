@@ -792,12 +792,6 @@ class TrendingMCPServer:
                     inputSchema={
                         "type": "object",
                         "properties": {
-                            "time_range": {
-                                "type": "string",
-                                "enum": ["month", "week", "day"],
-                                "default": "month",
-                                "description": "Time range for trending data",
-                            },
                             "category": {
                                 "type": "string",
                                 "description": "Filter by keyword/category (e.g., 'django', 'machine-learning', 'data')",
@@ -820,7 +814,7 @@ class TrendingMCPServer:
                 # RemoteOK Jobs Tools
                 Tool(
                     name="get_remote_jobs",
-                    description="Get remote job listings from RemoteOK. Filter by tags, search keywords, and sort by various criteria.",
+                    description="Get remote job listings from RemoteOK. Filter by tags and search keywords.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -832,12 +826,6 @@ class TrendingMCPServer:
                             "search": {
                                 "type": "string",
                                 "description": "Search keyword (e.g., 'senior developer', 'machine learning')",
-                            },
-                            "sort_by": {
-                                "type": "string",
-                                "enum": ["date", "salary"],
-                                "default": "date",
-                                "description": "Sort method",
                             },
                             "limit": {
                                 "type": "integer",
@@ -1319,7 +1307,6 @@ class TrendingMCPServer:
                 # PyPI Packages Tools
                 elif name == "get_pypi_packages":
                     response = await self.pypi_fetcher.fetch_trending_packages(
-                        time_range=arguments.get("time_range", "month"),
                         category=arguments.get("category"),
                         limit=arguments.get("limit", 50),
                         use_cache=arguments.get("use_cache", True),
@@ -1331,7 +1318,6 @@ class TrendingMCPServer:
                     response = await self.remoteok_fetcher.fetch_jobs(
                         tags=arguments.get("tags"),
                         search=arguments.get("search"),
-                        sort_by=arguments.get("sort_by", "date"),
                         limit=arguments.get("limit", 50),
                         use_cache=arguments.get("use_cache", True),
                     )
