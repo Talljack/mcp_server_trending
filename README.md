@@ -19,7 +19,7 @@
 
 ## 🌟 项目简介
 
-MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的热门榜单聚合服务，让你的 AI 助手能够实时查询：
+MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的热门榜单聚合服务,让你的 AI 助手能够实时查询：
 
 - 📊 **GitHub Trending** - 热门仓库和开发者
 - 💬 **Hacker News** - 技术社区热门讨论
@@ -35,6 +35,16 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 - 🔮 **ModelScope** - 魔塔社区 AI 模型与数据集
 - 📈 **Stack Overflow Trends** - 技术标签趋势
 - ⭐ **Awesome Lists** - GitHub 精选资源列表
+- 🧩 **VS Code Extensions** - Visual Studio Marketplace 热门扩展
+- 📦 **npm Packages** - npm 热门 JavaScript/Node.js 包
+- 🔌 **Chrome Extensions** - Chrome Web Store 热门扩展
+- 🐍 **PyPI Packages** - Python 包热门排行
+- 💼 **RemoteOK Jobs** - 远程工作机会
+- 🔌 **WordPress Plugins** - WordPress 插件目录
+- 📄 **arXiv Papers** - 科研论文预印本平台
+- 🎓 **Semantic Scholar** - AI 驱动的学术搜索引擎
+- 🏆 **OpenReview** - ML 会议论文评审平台
+- 🔬 **Aggregation Analysis** - 跨平台聚合分析工具
 
 > 专为独立开发者、Indie Hackers 和技术创业者设计
 
@@ -42,15 +52,25 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 
 ## ⚡ 快速开始
 
-### 方式一：从 PyPI 安装（推荐）
+### 方式一：使用 Smithery 安装（推荐）
+
+[Smithery](https://smithery.ai/) 是一个 MCP 服务器管理平台，可以一键安装到任何支持的客户端。
+
+```bash
+npx -y @smithery/cli install mcp-server-trending --client <CLIENT_NAME>
+```
+
+支持的客户端：`claude-desktop`、`cursor`、`cline`、`windsurf`、`zed` 等
+
+### 方式二：从 PyPI 安装
 
 ```bash
 pip install mcp-server-trending
 ```
 
-> **注意**：首次发布前，请使用方式二从源码安装
+> **注意**：首次发布前，请使用方式三从源码安装
 
-### 方式二：从源码安装
+### 方式三：从源码安装
 
 ```bash
 git clone https://github.com/Talljack/mcp_server_trending.git
@@ -60,9 +80,39 @@ bash install.sh
 
 **就这么简单！** 🎉 脚本会自动完成所有配置。
 
+---
+
+## 🖥️ 支持的客户端
+
+我们支持所有主流的 AI 编辑器和工具：
+
+| 类别 | 客户端 | 配置方式 | 官方文档 |
+|------|--------|---------|---------|
+| **AI 桌面应用** | Claude Desktop | JSON 配置 | [文档](https://modelcontextprotocol.io/quickstart/user) |
+| | Cherry Studio | JSON 配置 | - |
+| **代码编辑器** | Cursor | `.cursor/mcp.json` | [文档](https://docs.cursor.com/context/model-context-protocol) |
+| | Windsurf | JSON 配置 | [文档](https://docs.windsurf.com/windsurf/cascade/mcp) |
+| | Zed | `settings.json` | [文档](https://zed.dev/docs/assistant/context-servers) |
+| **VS Code 扩展** | Cline | MCP 配置 | - |
+| | Continue | JSON 配置 | [文档](https://docs.continue.dev/features/model-context-protocol) |
+| | Roo Code | JSON 配置 | [文档](https://docs.roocode.com/features/mcp/using-mcp-in-roo) |
+| **JetBrains** | AI Assistant | MCP 设置 | [文档](https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html) |
+| **AI 工具** | Claude Code | CLI 命令 | [文档](https://docs.anthropic.com/en/docs/claude-code/mcp) |
+| | Amazon Q Developer | JSON 配置 | [文档](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-mcp-configuration.html) |
+| | Augment Code | UI 或 JSON | - |
+| | Kiro | MCP 设置 | [文档](https://kiro.dev/docs/mcp/configuration/) |
+| **终端工具** | Warp | MCP 设置 | [文档](https://docs.warp.dev/knowledge-and-collaboration/mcp) |
+
+> 💡 **提示**：点击下方的配置说明查看详细的安装步骤
+
+---
+
 ### 配置 AI 客户端
 
-#### Claude Desktop (MacOS)
+> **提示**：所有客户端都支持 `env` 配置！✅
+
+<details>
+<summary><b>Claude Desktop</b></summary>
 
 编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -84,9 +134,8 @@ bash install.sh
     "trending": {
       "command": "mcp-server-trending",
       "env": {
-        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret",
-        "HUGGINGFACE_TOKEN": "your_huggingface_token"
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
       }
     }
   }
@@ -95,7 +144,185 @@ bash install.sh
 
 **重启 Claude Desktop 即可使用！**
 
-#### Cherry Studio
+</details>
+
+<details>
+<summary><b>Claude Code</b></summary>
+
+运行以下命令添加 MCP 服务器。查看 [Claude Code MCP 文档](https://docs.anthropic.com/en/docs/claude-code/mcp) 了解更多。
+
+```sh
+claude mcp add trending -- mcp-server-trending
+```
+
+**带环境变量的配置**：
+```sh
+```
+
+</details>
+
+<details>
+<summary><b>Cursor</b></summary>
+
+在项目根目录创建 `.cursor/mcp.json`（项目级）或 `~/.cursor/mcp.json`（全局）。查看 [Cursor MCP 文档](https://docs.cursor.com/context/model-context-protocol) 了解更多。
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
+    }
+  }
+}
+```
+
+**注意**：如果是从源码安装，command 需要使用完整路径：
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "/path/to/mcp_server_trending/.venv/bin/mcp-server-trending",
+      "args": []
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>Windsurf</b></summary>
+
+添加到 Windsurf MCP 配置文件。查看 [Windsurf MCP 文档](https://docs.windsurf.com/windsurf/cascade/mcp) 了解更多。
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>VS Code (Cline)</b></summary>
+
+打开 Cline 扩展 → MCP Servers → Configure MCP Servers:
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      },
+      "alwaysAllow": [],
+      "disabled": false
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>VS Code (Continue)</b></summary>
+
+在 Continue 配置中添加。查看 [Continue 文档](https://docs.continue.dev/features/model-context-protocol) 了解更多。
+
+```json
+{
+  "mcpServers": [
+    {
+      "name": "trending",
+      "command": "mcp-server-trending",
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary><b>Zed</b></summary>
+
+添加到 Zed `settings.json`。查看 [Zed Context Server 文档](https://zed.dev/docs/assistant/context-servers) 了解更多。
+
+```json
+{
+  "context_servers": {
+    "mcp-server-trending": {
+      "source": "custom",
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_token",
+        "GITHUB_TOKEN": "your_token"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><b>JetBrains AI Assistant</b></summary>
+
+查看 [JetBrains AI Assistant 文档](https://www.jetbrains.com/help/ai-assistant/configure-an-mcp-server.html) 了解更多。
+
+1. 在 JetBrains IDE 中，进入 `Settings` → `Tools` → `AI Assistant` → `Model Context Protocol (MCP)`
+2. 点击 `+ Add`
+3. 在对话框左上角点击 `Command`，从列表中选择 `As JSON` 选项
+4. 添加以下配置并点击 `OK`：
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
+    }
+  }
+}
+```
+
+5. 点击 `Apply` 保存更改
+
+</details>
+
+<details>
+<summary><b>Cherry Studio</b></summary>
 
 在 Cherry Studio → 设置 → MCP Server 中添加:
 
@@ -106,8 +333,9 @@ bash install.sh
   "type": "stdio",
   "command": "mcp-server-trending",
   "env": {
-    "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-    "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+    
+    "HUGGINGFACE_TOKEN": "your_huggingface_token",
+    "GITHUB_TOKEN": "your_github_token"
   }
 }
 ```
@@ -119,9 +347,12 @@ bash install.sh
 }
 ```
 
-#### Cursor
+</details>
 
-在项目根目录创建 `.cursor/mcp.json`（项目级）或 `~/.cursor/mcp.json`（全局）:
+<details>
+<summary><b>Roo Code</b></summary>
+
+添加到 Roo Code MCP 配置文件。查看 [Roo Code MCP 文档](https://docs.roocode.com/features/mcp/using-mcp-in-roo) 了解更多。
 
 ```json
 {
@@ -130,17 +361,21 @@ bash install.sh
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
       }
     }
   }
 }
 ```
 
-#### Cline (VSCode)
+</details>
 
-打开 Cline 扩展 → MCP Servers → Configure MCP Servers:
+<details>
+<summary><b>Amazon Q Developer CLI</b></summary>
+
+添加到 Amazon Q Developer CLI 配置文件。查看 [Amazon Q Developer CLI 文档](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/command-line-mcp-configuration.html) 了解更多。
 
 ```json
 {
@@ -149,36 +384,143 @@ bash install.sh
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
-      },
-      "alwaysAllow": [],
-      "disabled": false
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
     }
   }
 }
 ```
 
-#### Continue (VSCode/JetBrains)
+</details>
 
-在 Continue 配置中添加:
+<details>
+<summary><b>Warp</b></summary>
+
+查看 [Warp Model Context Protocol 文档](https://docs.warp.dev/knowledge-and-collaboration/mcp#adding-an-mcp-server) 了解更多。
+
+1. 进入 `Settings` → `AI` → `Manage MCP servers`
+2. 点击 `+ Add` 按钮添加新的 MCP 服务器
+3. 粘贴以下配置：
 
 ```json
 {
+  "trending": {
+    "command": "mcp-server-trending",
+    "args": [],
+    "env": {
+      
+      "HUGGINGFACE_TOKEN": "your_huggingface_token",
+      "GITHUB_TOKEN": "your_github_token"
+    },
+    "working_directory": null,
+    "start_on_launch": true
+  }
+}
+```
+
+4. 点击 `Save` 保存更改
+
+</details>
+
+<details>
+<summary><b>Augment Code</b></summary>
+
+**使用界面配置**：
+
+1. 点击汉堡菜单
+2. 选择 **Settings**
+3. 进入 **Tools** 部分
+4. 点击 **+ Add MCP** 按钮
+5. 输入命令：`mcp-server-trending`
+6. 命名为 **Trending**
+7. 点击 **Add** 按钮
+
+**手动配置**：
+
+1. 按 Cmd/Ctrl + Shift + P 或进入 Augment 面板的汉堡菜单
+2. 选择 Edit Settings
+3. 在 Advanced 下，点击 Edit in settings.json
+4. 在 `augment.advanced` 对象的 `mcpServers` 数组中添加服务器配置：
+
+```json
+"augment.advanced": {
   "mcpServers": [
     {
       "name": "trending",
       "command": "mcp-server-trending",
+      "args": [],
       "env": {
-        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret"
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
       }
     }
   ]
 }
 ```
 
-**所有客户端都支持 `env` 配置！** ✅
+</details>
+
+<details>
+<summary><b>Kiro</b></summary>
+
+查看 [Kiro Model Context Protocol 文档](https://kiro.dev/docs/mcp/configuration/) 了解更多。
+
+1. 进入 `Kiro` → `MCP Servers`
+2. 点击 `+ Add` 按钮添加新的 MCP 服务器
+3. 粘贴以下配置：
+
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "mcp-server-trending",
+      "args": [],
+      "env": {
+        
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
+```
+
+4. 点击 `Save` 保存更改
+
+</details>
+
+<details>
+<summary><b>从源码安装时的配置</b></summary>
+
+如果你是从源码安装的，需要在 `command` 中使用完整路径指向虚拟环境中的可执行文件：
+
+**找到可执行文件路径**：
+```bash
+which mcp-server-trending
+# 或者
+cd mcp_server_trending && echo "$(pwd)/.venv/bin/mcp-server-trending"
+```
+
+**配置示例**：
+```json
+{
+  "mcpServers": {
+    "trending": {
+      "command": "/path/to/mcp_server_trending/.venv/bin/mcp-server-trending",
+      "args": [],
+      "env": {
+      }
+    }
+  }
+}
+```
+
+</details>
 
 ---
 
@@ -186,41 +528,7 @@ bash install.sh
 
 ### 可选配置（按需添加）
 
-#### 1. Product Hunt API Credentials（可选，获取真实产品数据）
-
-**获取方式**：
-1. 访问 https://www.producthunt.com/v2/oauth/applications
-2. 创建一个新应用 (Create a new application)
-3. 复制 **Client ID** 和 **Client Secret**
-
-**配置方法**：
-
-**方式一：在 MCP 配置中添加（推荐）**
-```json
-{
-  "env": {
-    "PRODUCTHUNT_CLIENT_ID": "your_client_id_here",
-    "PRODUCTHUNT_CLIENT_SECRET": "your_client_secret_here"
-  }
-}
-```
-
-**方式二：使用 .env 文件**
-```bash
-cp .env.example .env
-# 编辑 .env 文件
-PRODUCTHUNT_CLIENT_ID=your_client_id_here
-PRODUCTHUNT_CLIENT_SECRET=your_client_secret_here
-```
-
-**注意**：
-- ✅ 不配置会返回友好的占位数据和设置说明
-- ✅ 配置后可获取真实的产品数据、投票数、评论数等
-- 🆓 Product Hunt API 免费使用
-
----
-
-#### 2. HuggingFace Token（可选，提高请求限制）
+#### 1. HuggingFace Token（可选，提高请求限制）
 
 **获取方式**：
 1. 访问 https://huggingface.co/settings/tokens
@@ -249,7 +557,7 @@ echo "HUGGINGFACE_TOKEN=your_token_here" >> .env
 
 ---
 
-#### 3. GitHub Token（可选，提高请求限制）
+#### 2. GitHub Token（可选，提高请求限制）
 
 **获取方式**：
 1. 访问 https://github.com/settings/tokens
@@ -279,8 +587,7 @@ echo "HUGGINGFACE_TOKEN=your_token_here" >> .env
     "trending": {
       "command": "mcp-server-trending",
       "env": {
-        "PRODUCTHUNT_CLIENT_ID": "your_producthunt_client_id",
-        "PRODUCTHUNT_CLIENT_SECRET": "your_producthunt_client_secret",
+        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -294,6 +601,8 @@ echo "HUGGINGFACE_TOKEN=your_token_here" >> .env
 ---
 
 ## 💬 使用示例
+
+**基础查询示例：**
 
 ```
 请帮我查询 GitHub 上今天最热门的 Python 项目
@@ -319,6 +628,46 @@ Hacker News 上现在有什么热门的技术讨论？
 帮我找一些 Python 相关的 Awesome 列表
 ```
 
+```
+查看 VS Code 最热门的扩展有哪些
+```
+
+```
+帮我找最受欢迎的 React 相关 npm 包
+```
+
+```
+Chrome 浏览器有什么好用的生产力扩展？
+```
+
+**新增功能示例：**
+
+```
+查看 PyPI 上最热门的 Python 包
+```
+
+```
+帮我找一些远程工作机会，要求是 Python 开发
+```
+
+```
+WordPress 有哪些热门的 SEO 插件？
+```
+
+**聚合分析示例：**
+
+```
+分析一下 Next.js 在各个平台的流行度
+```
+
+```
+给我看看独立开发者的收入仪表板
+```
+
+```
+追踪一下 AI Agents 这个话题在各个平台的热度
+```
+
 ---
 
 ## 🎯 功能特性
@@ -342,12 +691,27 @@ Hacker News 上现在有什么热门的技术讨论？
 | **ModelScope** | 魔塔 AI 模型/数据集 | ✅ 完全可用 | ❌ 不需要 |
 | **Stack Overflow Trends** | 技术标签趋势 | ✅ 完全可用 | ❌ 不需要 |
 | **Awesome Lists** | GitHub 精选列表 | ✅ 完全可用 | ❌ 可选 Token |
+| **VS Code Extensions** | 热门扩展 | ✅ 完全可用 | ❌ 不需要 |
+| **npm Packages** | JavaScript/Node.js 包 | ✅ 完全可用 | ❌ 不需要 |
+| **Chrome Extensions** | 浏览器扩展（精选数据）| ✅ 完全可用 | ❌ 不需要 |
+| **PyPI Packages** | Python 包下载排行 | ✅ 完全可用 | ❌ 不需要 |
+| **RemoteOK Jobs** | 远程工作职位 | ✅ 完全可用* | ❌ 不需要 |
+| **WordPress Plugins** | WordPress 插件 | ✅ 完全可用 | ❌ 不需要 |
+| **arXiv Papers** | 科研论文预印本 | ✅ 完全可用 | ❌ 不需要 |
+| **Semantic Scholar** | 学术搜索引擎 | ✅ 完全可用 | ❌ 不需要 |
+| **OpenReview** | ML 会议论文评审 | ✅ 完全可用 | ❌ 不需要 |
 
 > \* **说明**：
 > - Product Hunt 需要配置 API credentials 才能获取真实数据，否则返回占位数据和配置指引
 > - OpenRouter 需要配置 API Key 才能使用，未配置时返回错误提示和配置说明
+> - **RemoteOK** 使用官方公开 JSON API (`https://remoteok.com/api`)，完全免费无需认证
+>   - ✅ API 格式：第一条是表头，职位数据从第二条开始
+>   - ⚠️ 网络要求：RemoteOK 会阻止 VPN/代理访问，如遇到 "Disable your VPN" 错误：
+>     - 关闭 VPN 或代理软件
+>     - 使用非数据中心 IP（家庭网络、手机热点等）
+>     - 代码已实现智能降级：API 失败时自动尝试网页抓取
 
-### 可用工具 (22个)
+### 可用工具 (34个)
 
 **GitHub** (2个)
 - `get_github_trending_repos` - 获取 GitHub trending 仓库
@@ -396,6 +760,34 @@ Hacker News 上现在有什么热门的技术讨论？
 
 **Awesome Lists** (1个) ⭐
 - `get_awesome_lists` - 获取 GitHub Awesome 精选列表
+
+**VS Code Extensions** (1个) 🧩
+- `get_vscode_extensions` - 获取 Visual Studio Marketplace 热门扩展
+
+**npm Packages** (1个) 📦
+- `get_npm_packages` - 获取 npm 热门 JavaScript/Node.js 包
+
+**Chrome Extensions** (1个) 🔌
+- `get_chrome_extensions` - 获取 Chrome Web Store 热门扩展（精选数据）
+
+**PyPI Packages** (1个) 🐍
+- `get_pypi_packages` - 获取 Python 包下载排行
+
+**RemoteOK Jobs** (1个) 💼
+- `get_remote_jobs` - 获取远程工作职位
+
+**WordPress Plugins** (1个) 🔌
+- `get_wordpress_plugins` - 获取 WordPress 插件目录热门插件
+
+**Research Papers** (3个) 📄
+- `get_arxiv_papers` - 获取 arXiv 科研论文（支持分类、关键词搜索）
+- `search_semantic_scholar` - 搜索 Semantic Scholar 学术论文（AI 驱动、引用指标）
+- `get_openreview_papers` - 获取 OpenReview ML 会议论文（ICLR、NeurIPS、ICML 等）
+
+**Aggregation Analysis** (3个) 🔬
+- `analyze_tech_stack` - 跨平台技术栈分析（GitHub + npm + PyPI + Stack Overflow + VS Code + Jobs）
+- `get_indie_revenue_dashboard` - 独立开发者收入仪表板（Indie Hackers + TrustMRR）
+- `track_topic_trends` - 话题趋势追踪（Hacker News + GitHub + Stack Overflow + dev.to + Juejin）
 
 ---
 

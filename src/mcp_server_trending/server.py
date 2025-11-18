@@ -11,8 +11,11 @@ from mcp.types import TextContent, Tool
 from . import __version__
 from .config import config
 from .fetchers import (
+    AggregationFetcher,
     AIToolsFetcher,
+    ArxivFetcher,
     AwesomeFetcher,
+    ChromeWebStoreFetcher,
     DevToFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
@@ -20,12 +23,19 @@ from .fetchers import (
     IndieHackersFetcher,
     JuejinFetcher,
     ModelScopeFetcher,
+    NPMFetcher,
+    OpenReviewFetcher,
     OpenRouterFetcher,
     ProductHuntFetcher,
+    PyPIFetcher,
+    RemoteOKFetcher,
     # RedditFetcher,  # Disabled: Requires Reddit API credentials
+    SemanticScholarFetcher,
     StackOverflowFetcher,
     TrustMRRFetcher,
     V2EXFetcher,
+    VSCodeMarketplaceFetcher,
+    WordPressFetcher,
 )
 from .utils import SimpleCache, logger, setup_logger
 
@@ -60,6 +70,39 @@ class TrendingMCPServer:
         self.modelscope_fetcher = ModelScopeFetcher(cache=self.cache)
         self.stackoverflow_fetcher = StackOverflowFetcher(cache=self.cache)
         self.awesome_fetcher = AwesomeFetcher(cache=self.cache)
+        self.vscode_fetcher = VSCodeMarketplaceFetcher(cache=self.cache)
+        self.npm_fetcher = NPMFetcher(cache=self.cache)
+        self.chrome_fetcher = ChromeWebStoreFetcher(cache=self.cache)
+        self.pypi_fetcher = PyPIFetcher(cache=self.cache)
+        self.remoteok_fetcher = RemoteOKFetcher(cache=self.cache)
+        self.wordpress_fetcher = WordPressFetcher(cache=self.cache)
+
+        # Research paper fetchers with longer cache TTL (papers update slowly)
+        # All paper platforms: 24 hours cache - papers and citations update slowly
+        paper_cache_ttl = 86400  # 24 hours
+        self.arxiv_fetcher = ArxivFetcher(cache=self.cache, cache_ttl=paper_cache_ttl)
+        self.semanticscholar_fetcher = SemanticScholarFetcher(
+            cache=self.cache,
+            cache_ttl=paper_cache_ttl,
+            api_key=config.semanticscholar_api_key
+        )
+        self.openreview_fetcher = OpenReviewFetcher(cache=self.cache, cache_ttl=paper_cache_ttl)
+
+        # Initialize aggregation fetcher with references to other fetchers
+        self.aggregation_fetcher = AggregationFetcher(
+            cache=self.cache,
+            github=self.github_fetcher,
+            npm=self.npm_fetcher,
+            pypi=self.pypi_fetcher,
+            stackoverflow=self.stackoverflow_fetcher,
+            vscode=self.vscode_fetcher,
+            remoteok=self.remoteok_fetcher,
+            indiehackers=self.indiehackers_fetcher,
+            trustmrr=self.trustmrr_fetcher,
+            hackernews=self.hackernews_fetcher,
+            devto=self.devto_fetcher,
+            juejin=self.juejin_fetcher,
+        )
 
         # Register handlers
         self._register_handlers()
@@ -645,6 +688,370 @@ class TrendingMCPServer:
                         },
                     },
                 ),
+                # VS Code Extensions Tools
+                Tool(
+                    name="get_vscode_extensions",
+                    description="Get trending VS Code extensions from Visual Studio Marketplace. Discover popular extensions for development, themes, productivity, and more.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["installs", "rating", "trending", "updated"],
+                                "default": "installs",
+                                "description": "Sort by (installs, rating, trending, updated)",
+                            },
+                            "category": {
+                                "type": "string",
+                                "description": "Filter by category (e.g., 'Programming Languages', 'Themes', 'Debuggers')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of extensions to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # npm Packages Tools
+                Tool(
+                    name="get_npm_packages",
+                    description="Get trending npm packages. Discover popular JavaScript/Node.js packages by category or keyword.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "time_range": {
+                                "type": "string",
+                                "enum": ["week", "month"],
+                                "default": "week",
+                                "description": "Time range for trending data",
+                            },
+                            "category": {
+                                "type": "string",
+                                "description": "Filter by keyword/category (e.g., 'react', 'vue', 'ai', 'cli')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 250,
+                                "description": "Number of packages to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Chrome Extensions Tools
+                Tool(
+                    name="get_chrome_extensions",
+                    description="Get popular Chrome Web Store extensions. Note: Chrome Web Store doesn't have a public API, so this returns curated data for known popular extensions.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "default": "productivity",
+                                "description": "Extension category (productivity, developer-tools, etc.)",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["popular", "rating", "featured"],
+                                "default": "popular",
+                                "description": "Sort method",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of extensions to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # PyPI Packages Tools
+                Tool(
+                    name="get_pypi_packages",
+                    description="Get trending PyPI packages. Discover popular Python packages by category or keyword.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "description": "Filter by keyword/category (e.g., 'django', 'machine-learning', 'data')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 250,
+                                "description": "Number of packages to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # RemoteOK Jobs Tools
+                Tool(
+                    name="get_remote_jobs",
+                    description="Get remote job listings from RemoteOK. Filter by tags and search keywords.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "tags": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Filter by tags (e.g., ['python', 'remote', 'full-time'])",
+                            },
+                            "search": {
+                                "type": "string",
+                                "description": "Search keyword (e.g., 'senior developer', 'machine learning')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 200,
+                                "description": "Number of jobs to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # WordPress Plugins Tools
+                Tool(
+                    name="get_wordpress_plugins",
+                    description="Get trending WordPress plugins from the official WordPress.org directory. Discover popular, new, featured, or updated plugins.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "browse": {
+                                "type": "string",
+                                "enum": ["popular", "featured", "new", "updated"],
+                                "default": "popular",
+                                "description": "Browse type",
+                            },
+                            "search": {
+                                "type": "string",
+                                "description": "Search keyword (e.g., 'seo', 'ecommerce', 'security')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of plugins to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Research Paper Tools
+                Tool(
+                    name="get_arxiv_papers",
+                    description="Get research papers from arXiv.org preprint repository. Search by category (cs.AI, cs.LG, cs.CV, etc.) or keywords. Covers Computer Science, Math, Physics, and more.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "description": "arXiv category (e.g., 'cs.AI', 'cs.LG', 'cs.CV', 'cs.CL', 'stat.ML')",
+                            },
+                            "search_query": {
+                                "type": "string",
+                                "description": "Search keywords (e.g., 'transformers', 'neural networks')",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["submittedDate", "lastUpdatedDate", "relevance"],
+                                "default": "submittedDate",
+                                "description": "Sort field",
+                            },
+                            "sort_order": {
+                                "type": "string",
+                                "enum": ["descending", "ascending"],
+                                "default": "descending",
+                                "description": "Sort order",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 2000,
+                                "description": "Number of papers to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="search_semantic_scholar",
+                    description="Search academic papers on Semantic Scholar with AI-powered relevance and citation metrics. Get influential citations, open access PDFs, and comprehensive author information.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query (e.g., 'transformers', 'neural networks', 'deep learning')",
+                            },
+                            "fields_of_study": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Filter by fields (e.g., ['Computer Science', 'Medicine'])",
+                            },
+                            "year": {
+                                "type": "string",
+                                "description": "Year range (e.g., '2020-2023', '2023')",
+                            },
+                            "min_citation_count": {
+                                "type": "integer",
+                                "description": "Minimum citation count",
+                            },
+                            "open_access_pdf": {
+                                "type": "boolean",
+                                "default": False,
+                                "description": "Only papers with open access PDFs",
+                            },
+                            "sort": {
+                                "type": "string",
+                                "enum": ["citationCount:desc", "publicationDate:desc", "relevance"],
+                                "default": "citationCount:desc",
+                                "description": "Sort order",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 100,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of papers to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_openreview_papers",
+                    description="Get papers from OpenReview ML conferences (ICLR, NeurIPS, ICML). Access peer review scores, decisions, and ratings from top ML conferences.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "venue": {
+                                "type": "string",
+                                "default": "ICLR.cc/2024/Conference",
+                                "description": "Venue (e.g., 'ICLR.cc/2024/Conference', 'iclr2024', 'neurips2023')",
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "Search in title/abstract",
+                            },
+                            "decision": {
+                                "type": "string",
+                                "description": "Filter by decision (e.g., 'Accept', 'Reject')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 100,
+                                "minimum": 1,
+                                "maximum": 1000,
+                                "description": "Number of papers to return",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Aggregation Analysis Tools
+                Tool(
+                    name="analyze_tech_stack",
+                    description="Analyze technology stack popularity across multiple platforms (GitHub, npm, PyPI, Stack Overflow, VS Code, job postings). Get a comprehensive view of a technology's ecosystem.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "tech": {
+                                "type": "string",
+                                "description": "Technology name (e.g., 'nextjs', 'python', 'react', 'vue')",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["tech"],
+                    },
+                ),
+                Tool(
+                    name="get_indie_revenue_dashboard",
+                    description="Get aggregated indie developer revenue dashboard from Indie Hackers and TrustMRR. View revenue statistics, top categories, and success stories.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="track_topic_trends",
+                    description="Track topic trends across multiple platforms (Hacker News, GitHub, Stack Overflow, dev.to, Juejin). Discover emerging topics and technologies.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "topic": {
+                                "type": "string",
+                                "description": "Topic to track (e.g., 'ai-agents', 'web3', 'serverless', 'edge-computing')",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["topic"],
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -867,6 +1274,129 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # VS Code Extensions Tools
+                elif name == "get_vscode_extensions":
+                    response = await self.vscode_fetcher.fetch_trending_extensions(
+                        sort_by=arguments.get("sort_by", "installs"),
+                        category=arguments.get("category"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # npm Packages Tools
+                elif name == "get_npm_packages":
+                    response = await self.npm_fetcher.fetch_trending_packages(
+                        time_range=arguments.get("time_range", "week"),
+                        category=arguments.get("category"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Chrome Extensions Tools
+                elif name == "get_chrome_extensions":
+                    response = await self.chrome_fetcher.fetch_trending_extensions(
+                        category=arguments.get("category", "productivity"),
+                        sort_by=arguments.get("sort_by", "popular"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # PyPI Packages Tools
+                elif name == "get_pypi_packages":
+                    response = await self.pypi_fetcher.fetch_trending_packages(
+                        category=arguments.get("category"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # RemoteOK Jobs Tools
+                elif name == "get_remote_jobs":
+                    response = await self.remoteok_fetcher.fetch_jobs(
+                        tags=arguments.get("tags"),
+                        search=arguments.get("search"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # WordPress Plugins Tools
+                elif name == "get_wordpress_plugins":
+                    response = await self.wordpress_fetcher.fetch_plugins(
+                        browse=arguments.get("browse", "popular"),
+                        search=arguments.get("search"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Research Paper Tools
+                elif name == "get_arxiv_papers":
+                    response = await self.arxiv_fetcher.fetch_papers(
+                        category=arguments.get("category"),
+                        search_query=arguments.get("search_query"),
+                        sort_by=arguments.get("sort_by", "submittedDate"),
+                        sort_order=arguments.get("sort_order", "descending"),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "search_semantic_scholar":
+                    response = await self.semanticscholar_fetcher.search_papers(
+                        query=arguments.get("query"),
+                        fields_of_study=arguments.get("fields_of_study"),
+                        year=arguments.get("year"),
+                        min_citation_count=arguments.get("min_citation_count"),
+                        open_access_pdf=arguments.get("open_access_pdf", False),
+                        sort=arguments.get("sort", "citationCount:desc"),
+                        limit=arguments.get("limit", 100),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_openreview_papers":
+                    response = await self.openreview_fetcher.fetch_papers(
+                        venue=arguments.get("venue", "ICLR.cc/2024/Conference"),
+                        content=arguments.get("content"),
+                        decision=arguments.get("decision"),
+                        limit=arguments.get("limit", 100),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Aggregation Analysis Tools
+                elif name == "analyze_tech_stack":
+                    tech = arguments.get("tech")
+                    if not tech:
+                        raise ValueError("tech parameter is required")
+
+                    response = await self.aggregation_fetcher.analyze_tech_stack(
+                        tech=tech,
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_indie_revenue_dashboard":
+                    response = await self.aggregation_fetcher.get_indie_revenue_dashboard(
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "track_topic_trends":
+                    topic = arguments.get("topic")
+                    if not topic:
+                        raise ValueError("topic parameter is required")
+
+                    response = await self.aggregation_fetcher.track_topic_trends(
+                        topic=topic,
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -919,6 +1449,12 @@ class TrendingMCPServer:
         await self.modelscope_fetcher.close()
         await self.stackoverflow_fetcher.close()
         await self.awesome_fetcher.close()
+        await self.vscode_fetcher.close()
+        await self.npm_fetcher.close()
+        await self.chrome_fetcher.close()
+        await self.pypi_fetcher.close()
+        await self.remoteok_fetcher.close()
+        await self.wordpress_fetcher.close()
 
 
 async def main():

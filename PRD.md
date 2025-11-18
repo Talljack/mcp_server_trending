@@ -20,7 +20,7 @@
 
 ## 2. 核心功能模块
 
-### 2.1 榜单资源列表（已实现：13个平台，20个工具）
+### 2.1 榜单资源列表（已实现：19个平台，31个工具）
 
 #### 2.1.1 技术社区与讨论类
 
@@ -113,21 +113,81 @@
     - 支持搜索功能（search_text 参数）
     - 支持分页查询
 
+#### 2.1.4 扩展市场与包管理类
+
+14. **VS Code Extensions** ✅ 已实现
+    - Visual Studio Marketplace 扩展
+    - 按安装量、评分、趋势排序
+    - 分类筛选（Programming Languages, Themes, Debuggers等）
+    - 完整的扩展元数据（版本、评分、仓库链接等）
+
+15. **npm Packages** ✅ 已实现
+    - npm JavaScript/Node.js 包
+    - 按质量、流行度、维护度综合评分
+    - 下载量统计（周/月）
+    - 分类和关键词搜索
+
+16. **Chrome Extensions** ✅ 已实现
+    - Chrome Web Store 扩展
+    - 精选热门扩展数据
+    - 按类别筛选（productivity, developer-tools等）
+    - 注意：Chrome Web Store 无公开API，使用精选数据
+
+17. **PyPI Packages** ✅ 已实现
+    - Python 包下载排行
+    - 基于 BigQuery 公开数据集的下载统计
+    - 支持按月/周/日统计
+    - 完整的包元数据（版本、描述、作者等）
+    - 支持分类和关键词搜索
+
+18. **WordPress Plugins** ✅ 已实现
+    - WordPress 官方插件目录
+    - 按热门/特色/新/更新排序
+    - 活跃安装数、评分统计
+    - 支持搜索和分类筛选
+
+#### 2.1.5 招聘与就业类
+
+19. **RemoteOK Jobs** ✅ 已实现（需注意网络限制）
+    - 远程工作职位列表
+    - 按标签筛选（技术栈、职位类型等）
+    - 薪资范围信息
+    - 公司和职位详情
+    - 按发布日期/薪资排序
+    - ⚠️ **注意**：RemoteOK API 有反爬虫保护，会阻止 VPN/代理访问
+    - 如遇到 403 错误，需要：
+      - 关闭 VPN 或代理
+      - 使用正常的家庭/办公网络
+      - 或等待一段时间后重试
+
+#### 2.1.6 聚合分析工具
+
+20. **Tech Stack Analysis** ✅ 已实现
+    - 跨平台技术栈流行度分析
+    - 聚合数据来源：GitHub、npm、PyPI、Stack Overflow、VS Code、RemoteOK
+    - 计算综合流行度评分
+    - 生成技术生态系统报告
+
+21. **Indie Revenue Dashboard** ✅ 已实现
+    - 独立开发者收入仪表板
+    - 聚合数据来源：Indie Hackers、TrustMRR
+    - 统计平均MRR、成功案例数量
+    - 展示热门类别和收入分布
+
+22. **Topic Trends Tracking** ✅ 已实现
+    - 跨平台话题趋势追踪
+    - 聚合数据来源：Hacker News、GitHub、Stack Overflow、dev.to、Juejin
+    - 计算综合趋势评分
+    - 生成话题热度报告
+
 ---
 
 ### 2.1.X 计划实现的平台（未来扩展）
 
-#### 开发工具类
-- **Stack Overflow Trends** ✅ 可实现 - 技术标签趋势
-  - 有公开 API：`https://api.stackexchange.com/2.3/tags`
-  - 支持按流行度、活动度排序
-  - 可以获取标签的问题数量、关注者等数据
-
-#### 社交媒体类
-- **Awesome Lists** ✅ 可实现 - GitHub精选列表
-  - 通过 GitHub API 获取 awesome 主题仓库
-  - 可以获取 stars、forks、更新日期等
-  - 支持搜索和筛选
+#### 扩展市场类（其他）
+- **Firefox Add-ons** ⚠️ 待验证 - Firefox 扩展市场
+  - 可能有公开 API
+  - 类似 Chrome 扩展的数据结构
 
 #### 商业数据类
 - **Open Startup Rankings** ⚠️ 待验证 - 按MRR和增长率排名
@@ -240,7 +300,7 @@ mcp-server-trending/
 }
 ```
 
-## 4. 核心 MCP Tools 列表（已实现：20个工具）
+## 4. 核心 MCP Tools 列表（已实现：25个工具）
 
 ### 4.1 GitHub 相关 (2个工具)
 - `get_github_trending_repos` ✅ - 获取 Trending 仓库
@@ -290,19 +350,46 @@ mcp-server-trending/
 - `get_modelscope_models` ✅ - 获取热门AI模型（支持搜索、分页、排序）
 - `get_modelscope_datasets` ✅ - 获取热门数据集（支持分页、目标筛选）
 
+### 4.14 Stack Overflow 相关 (1个工具)
+- `get_stackoverflow_trends` ✅ - 获取 Stack Overflow 热门技术标签
+  - 使用 Stack Exchange API
+  - 支持按流行度、活动度排序
+  - 可以获取标签的问题数量、关注者等
+
+### 4.15 Awesome Lists 相关 (1个工具)
+- `get_awesome_lists` ✅ - 获取 GitHub Awesome 列表
+  - 通过 GitHub API 搜索 awesome 主题仓库
+  - 支持按 stars、forks、更新时间排序
+  - 可以获取仓库描述、语言、标签等
+
+### 4.16 VS Code Extensions 相关 (1个工具)
+- `get_vscode_extensions` ✅ - 获取 Visual Studio Marketplace 热门扩展
+  - 使用 VS Code Marketplace Gallery API
+  - 按安装量、评分、趋势、更新时间排序
+  - 支持按分类筛选（Programming Languages, Themes, Debuggers等）
+  - 包含扩展详情（版本、评分、仓库链接、统计数据）
+
+### 4.17 npm Packages 相关 (1个工具)
+- `get_npm_packages` ✅ - 获取 npm 热门 JavaScript/Node.js 包
+  - 使用 npm registry search API
+  - 综合评分（质量、流行度、维护度）
+  - 下载量统计（周/月）
+  - 支持关键词和分类搜索
+
+### 4.18 Chrome Extensions 相关 (1个工具)
+- `get_chrome_extensions` ✅ - 获取 Chrome Web Store 热门扩展
+  - 精选热门扩展数据（Chrome Web Store 无公开API）
+  - 按类别筛选（productivity, developer-tools等）
+  - 包含用户数、评分、开发者信息
+
 ---
 
 ### 计划中的工具（未来扩展）
 
 #### ✅ 可实现（推荐优先实现）
-- `get_stackoverflow_trends` - 获取 Stack Overflow 热门技术标签
-  - 使用 Stack Exchange API
-  - 支持按流行度、活动度排序
-  - 可以获取标签的问题数量、关注者等
-- `get_awesome_lists` - 获取 GitHub Awesome 列表
-  - 通过 GitHub API 搜索 awesome 主题仓库
-  - 支持按 stars、forks、更新时间排序
-  - 可以获取仓库描述、语言、标签等
+- `get_firefox_addons` - 获取 Firefox Add-ons 热门扩展
+  - Firefox 扩展市场可能有公开 API
+  - 类似 Chrome 扩展的数据结构
 
 #### ⚠️ 待验证
 - `get_open_startup_rankings` - 获取公开创业公司收入排名

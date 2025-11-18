@@ -16,6 +16,13 @@ from .devto import DevToArticle
 from .modelscope import ModelScopeModel, ModelScopeDataset
 from .stackoverflow import StackOverflowTag, StackOverflowParams
 from .awesome import AwesomeList, AwesomeParams
+from .arxiv import ArxivPaper, ArxivQuery
+from .semanticscholar import (
+    SemanticScholarAuthor,
+    SemanticScholarPaper,
+    SemanticScholarQuery,
+)
+from .openreview import OpenReviewPaper, OpenReviewQuery
 
 __all__ = [
     "BaseModel",
@@ -49,4 +56,11 @@ __all__ = [
     "StackOverflowParams",
     "AwesomeList",
     "AwesomeParams",
+    "ArxivPaper",
+    "ArxivQuery",
+    "SemanticScholarAuthor",
+    "SemanticScholarPaper",
+    "SemanticScholarQuery",
+    "OpenReviewPaper",
+    "OpenReviewQuery",
 ]
