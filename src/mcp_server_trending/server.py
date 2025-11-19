@@ -16,12 +16,15 @@ from .fetchers import (
     ArxivFetcher,
     AwesomeFetcher,
     ChromeWebStoreFetcher,
+    CodePenFetcher,
     DevToFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
+    HashnodeFetcher,
     HuggingFaceFetcher,
     IndieHackersFetcher,
     JuejinFetcher,
+    MediumFetcher,
     ModelScopeFetcher,
     NPMFetcher,
     OpenReviewFetcher,
@@ -76,6 +79,11 @@ class TrendingMCPServer:
         self.pypi_fetcher = PyPIFetcher(cache=self.cache)
         self.remoteok_fetcher = RemoteOKFetcher(cache=self.cache)
         self.wordpress_fetcher = WordPressFetcher(cache=self.cache)
+
+        # New fetchers for Hashnode, CodePen, Medium
+        self.hashnode_fetcher = HashnodeFetcher(cache=self.cache)
+        self.codepen_fetcher = CodePenFetcher(cache=self.cache)
+        self.medium_fetcher = MediumFetcher(cache=self.cache)
 
         # Research paper fetchers with longer cache TTL (papers update slowly)
         # All paper platforms: 24 hours cache - papers and citations update slowly
@@ -540,6 +548,168 @@ class TrendingMCPServer:
                                 "description": "Whether to use cached data",
                             },
                         },
+                    },
+                ),
+                # Hashnode Tools
+                Tool(
+                    name="get_hashnode_trending_articles",
+                    description="Get trending articles from Hashnode developer blogging platform. View popular technical blog posts from the Hashnode community.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of articles to fetch",
+                            },
+                            "tag": {
+                                "type": "string",
+                                "description": "Filter by tag slug (e.g., 'javascript', 'python', 'ai')",
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "enum": ["popular", "recent", "featured"],
+                                "default": "popular",
+                                "description": "Sort order",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_hashnode_publication_articles",
+                    description="Get articles from a specific Hashnode publication. Follow popular tech publications on Hashnode.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "publication_host": {
+                                "type": "string",
+                                "description": "Publication hostname (e.g., 'engineering.hashnode.com', 'blog.hashnode.com')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of articles to fetch",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["publication_host"],
+                    },
+                ),
+                # CodePen Tools
+                Tool(
+                    name="get_codepen_popular_pens",
+                    description="Get popular code snippets from CodePen. Discover trending front-end code examples and inspiration.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "page": {
+                                "type": "integer",
+                                "default": 1,
+                                "minimum": 1,
+                                "description": "Page number",
+                            },
+                            "tag": {
+                                "type": "string",
+                                "description": "Filter by tag (e.g., 'animation', '3d', 'canvas')",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_codepen_picked_pens",
+                    description="Get featured/picked pens from CodePen. View hand-selected high-quality front-end examples.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "page": {
+                                "type": "integer",
+                                "default": 1,
+                                "minimum": 1,
+                                "description": "Page number",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                    },
+                ),
+                # Medium Tools
+                Tool(
+                    name="get_medium_tag_articles",
+                    description="Get articles from a Medium tag. Discover popular technical writing on Medium by topic.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "string",
+                                "description": "Tag name (e.g., 'programming', 'ai', 'blockchain', 'data-science')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of articles to fetch",
+                            },
+                            "mode": {
+                                "type": "string",
+                                "enum": ["latest", "top"],
+                                "default": "latest",
+                                "description": "Sort mode",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["tag"],
+                    },
+                ),
+                Tool(
+                    name="get_medium_publication_articles",
+                    description="Get articles from a Medium publication. Follow popular tech publications like Towards Data Science, HackerNoon, etc.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "publication": {
+                                "type": "string",
+                                "description": "Publication slug (e.g., 'hackernoon', 'towardsdatascience', 'better-programming')",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of articles to fetch",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data",
+                            },
+                        },
+                        "required": ["publication"],
                     },
                 ),
                 # ModelScope (魔塔社区) Tools
@@ -1228,6 +1398,67 @@ class TrendingMCPServer:
                         per_page=arguments.get("per_page", 30),
                         tag=arguments.get("tag"),
                         top=arguments.get("top"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Hashnode Tools
+                elif name == "get_hashnode_trending_articles":
+                    response = await self.hashnode_fetcher.fetch_trending_articles(
+                        limit=arguments.get("limit", 20),
+                        tag=arguments.get("tag"),
+                        sort_by=arguments.get("sort_by", "popular"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_hashnode_publication_articles":
+                    publication_host = arguments.get("publication_host")
+                    if not publication_host:
+                        raise ValueError("publication_host parameter is required")
+                    response = await self.hashnode_fetcher.fetch_publication_articles(
+                        publication_host=publication_host,
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # CodePen Tools
+                elif name == "get_codepen_popular_pens":
+                    response = await self.codepen_fetcher.fetch_popular_pens(
+                        page=arguments.get("page", 1),
+                        tag=arguments.get("tag"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_codepen_picked_pens":
+                    response = await self.codepen_fetcher.fetch_picked_pens(
+                        page=arguments.get("page", 1),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Medium Tools
+                elif name == "get_medium_tag_articles":
+                    tag = arguments.get("tag")
+                    if not tag:
+                        raise ValueError("tag parameter is required")
+                    response = await self.medium_fetcher.fetch_tag_articles(
+                        tag=tag,
+                        limit=arguments.get("limit", 20),
+                        mode=arguments.get("mode", "latest"),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_medium_publication_articles":
+                    publication = arguments.get("publication")
+                    if not publication:
+                        raise ValueError("publication parameter is required")
+                    response = await self.medium_fetcher.fetch_publication_articles(
+                        publication=publication,
+                        limit=arguments.get("limit", 20),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
