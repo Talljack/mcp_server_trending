@@ -1029,6 +1029,10 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "description": "Search keyword (e.g., 'seo', 'ecommerce', 'security')",
                             },
+                            "tag": {
+                                "type": "string",
+                                "description": "Filter by tag (e.g., 'security', 'performance', 'seo')",
+                            },
                             "limit": {
                                 "type": "integer",
                                 "default": 50,
@@ -1559,6 +1563,7 @@ class TrendingMCPServer:
                     response = await self.wordpress_fetcher.fetch_plugins(
                         browse=arguments.get("browse", "popular"),
                         search=arguments.get("search"),
+                        tag=arguments.get("tag"),
                         limit=arguments.get("limit", 50),
                         use_cache=arguments.get("use_cache", True),
                     )

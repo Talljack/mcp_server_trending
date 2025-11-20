@@ -56,6 +56,9 @@ class HashnodeFetcher(BaseFetcher):
     ) -> TrendingResponse:
         """Internal implementation to fetch trending articles."""
         try:
+            # Fetch more articles than requested to allow for filtering
+            fetch_limit = limit * 3 if tag else limit
+
             # GraphQL query for trending feed
             query = """
             query FeedPosts($first: Int!) {
@@ -99,7 +102,7 @@ class HashnodeFetcher(BaseFetcher):
             }
             """
 
-            variables = {"first": limit}
+            variables = {"first": fetch_limit}
 
             logger.info(f"Fetching Hashnode articles (limit={limit}, tag={tag}, sort={sort_by})")
 
@@ -124,6 +127,30 @@ class HashnodeFetcher(BaseFetcher):
                 )
 
             articles = self._parse_articles(data)
+
+            # Apply tag filtering if specified
+            if tag:
+                articles = [
+                    article for article in articles
+                    if any(tag.lower() in t.lower() for t in article.tags)
+                ]
+
+            # Apply sorting based on sort_by parameter
+            if sort_by == "recent":
+                articles.sort(key=lambda x: x.published_at or datetime.min, reverse=True)
+            elif sort_by == "featured":
+                # Featured articles first, then by reactions
+                articles.sort(key=lambda x: (not x.is_featured, -x.reactions))
+            else:  # popular (default)
+                # Sort by reactions and views
+                articles.sort(key=lambda x: (x.reactions + x.views // 100), reverse=True)
+
+            # Limit to requested number
+            articles = articles[:limit]
+
+            # Re-rank articles after filtering and sorting
+            for i, article in enumerate(articles, start=1):
+                article.rank = i
 
             return self._create_response(
                 success=True,

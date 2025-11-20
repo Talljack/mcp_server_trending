@@ -377,13 +377,14 @@ class MediumFetcher(BaseFetcher):
                     image_id = post_data["virtuals"]["previewImage"]["imageId"]
                     preview_image = f"https://miro.medium.com/max/1200/{image_id}"
 
-                # Create article URL
+                # Create article URL using post ID
+                post_id = post_data.get("id", "")
                 unique_slug = post_data.get("uniqueSlug", "")
-                article_url = f"https://medium.com/p/{unique_slug}" if unique_slug else ""
+                article_url = f"https://medium.com/p/{post_id}" if post_id else ""
 
                 article = MediumArticle(
                     rank=rank,
-                    id=post_data.get("id", ""),
+                    id=post_id,
                     title=post_data.get("title", ""),
                     url=article_url,
                     subtitle=post_data.get("content", {}).get("subtitle"),
