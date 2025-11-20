@@ -20,7 +20,7 @@
 
 ## 2. 核心功能模块
 
-### 2.1 榜单资源列表（已实现：19个平台，31个工具）
+### 2.1 榜单资源列表（已实现：22个平台，37个工具）
 
 #### 2.1.1 技术社区与讨论类
 
@@ -57,9 +57,30 @@
    - 按分类筛选（前端、后端、AI等）
    - 中文技术内容平台
 
+**开发者博客平台**
+6. **Hashnode** ✅ 已实现
+   - 开发者博客热门文章
+   - 按标签筛选
+   - 支持查询特定 publication
+   - 独立开发者常用的博客平台
+
+**前端代码片段**
+7. **CodePen** ✅ 已实现
+   - 热门前端代码片段 (Popular Pens)
+   - 精选代码 (Picked Pens)
+   - 按标签筛选
+   - 前端开发者灵感来源
+
+**技术写作平台**
+8. **Medium** ✅ 已实现
+   - 按标签获取技术文章
+   - 按出版物获取文章（如 HackerNoon, Towards Data Science）
+   - 支持多种排序方式（latest, top）
+   - 技术写作和博客内容
+
 #### 2.1.2 代码与开发类
 
-6. **GitHub Trending** ✅ 已实现
+9. **GitHub Trending** ✅ 已实现
    - Repositories Trending (按日/周/月)
    - Developers Trending (按日/周/月)
    - 支持按编程语言筛选
@@ -67,7 +88,7 @@
 
 #### 2.1.3 产品与创业类
 
-7. **Product Hunt** ✅ 已实现
+10. **Product Hunt** ✅ 已实现
    - 今日/本周/本月产品榜单
    - 按分类筛选（Developer Tools, AI, SaaS等）
    - 产品发布和讨论
@@ -300,7 +321,7 @@ mcp-server-trending/
 }
 ```
 
-## 4. 核心 MCP Tools 列表（已实现：25个工具）
+## 4. 核心 MCP Tools 列表（已实现：37个工具）
 
 ### 4.1 GitHub 相关 (2个工具)
 - `get_github_trending_repos` ✅ - 获取 Trending 仓库
@@ -346,37 +367,49 @@ mcp-server-trending/
 ### 4.12 dev.to 相关 (1个工具)
 - `get_devto_articles` ✅ - 获取开发者文章（支持标签和时间筛选）
 
-### 4.13 ModelScope (魔塔) 相关 (2个工具)
+### 4.13 Hashnode 相关 (2个工具)
+- `get_hashnode_trending_articles` ✅ - 获取Hashnode热门文章（支持标签筛选和排序）
+- `get_hashnode_publication_articles` ✅ - 获取特定Hashnode出版物的文章
+
+### 4.14 CodePen 相关 (2个工具)
+- `get_codepen_popular_pens` ✅ - 获取CodePen热门代码片段（支持标签筛选）
+- `get_codepen_picked_pens` ✅ - 获取CodePen精选代码片段
+
+### 4.15 Medium 相关 (2个工具)
+- `get_medium_tag_articles` ✅ - 获取Medium标签文章（支持排序）
+- `get_medium_publication_articles` ✅ - 获取Medium出版物文章
+
+### 4.16 ModelScope (魔塔) 相关 (2个工具)
 - `get_modelscope_models` ✅ - 获取热门AI模型（支持搜索、分页、排序）
 - `get_modelscope_datasets` ✅ - 获取热门数据集（支持分页、目标筛选）
 
-### 4.14 Stack Overflow 相关 (1个工具)
+### 4.17 Stack Overflow 相关 (1个工具)
 - `get_stackoverflow_trends` ✅ - 获取 Stack Overflow 热门技术标签
   - 使用 Stack Exchange API
   - 支持按流行度、活动度排序
   - 可以获取标签的问题数量、关注者等
 
-### 4.15 Awesome Lists 相关 (1个工具)
+### 4.18 Awesome Lists 相关 (1个工具)
 - `get_awesome_lists` ✅ - 获取 GitHub Awesome 列表
   - 通过 GitHub API 搜索 awesome 主题仓库
   - 支持按 stars、forks、更新时间排序
   - 可以获取仓库描述、语言、标签等
 
-### 4.16 VS Code Extensions 相关 (1个工具)
+### 4.19 VS Code Extensions 相关 (1个工具)
 - `get_vscode_extensions` ✅ - 获取 Visual Studio Marketplace 热门扩展
   - 使用 VS Code Marketplace Gallery API
   - 按安装量、评分、趋势、更新时间排序
   - 支持按分类筛选（Programming Languages, Themes, Debuggers等）
   - 包含扩展详情（版本、评分、仓库链接、统计数据）
 
-### 4.17 npm Packages 相关 (1个工具)
+### 4.20 npm Packages 相关 (1个工具)
 - `get_npm_packages` ✅ - 获取 npm 热门 JavaScript/Node.js 包
   - 使用 npm registry search API
   - 综合评分（质量、流行度、维护度）
   - 下载量统计（周/月）
   - 支持关键词和分类搜索
 
-### 4.18 Chrome Extensions 相关 (1个工具)
+### 4.21 Chrome Extensions 相关 (1个工具)
 - `get_chrome_extensions` ✅ - 获取 Chrome Web Store 热门扩展
   - 精选热门扩展数据（Chrome Web Store 无公开API）
   - 按类别筛选（productivity, developer-tools等）

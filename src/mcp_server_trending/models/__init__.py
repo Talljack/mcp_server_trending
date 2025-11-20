@@ -23,6 +23,9 @@ from .semanticscholar import (
     SemanticScholarQuery,
 )
 from .openreview import OpenReviewPaper, OpenReviewQuery
+from .hashnode import HashnodeArticle, HashnodeAuthor
+from .codepen import CodePenPen, CodePenUser
+from .medium import MediumArticle, MediumAuthor
 
 __all__ = [
     "BaseModel",
@@ -63,4 +66,10 @@ __all__ = [
     "SemanticScholarQuery",
     "OpenReviewPaper",
     "OpenReviewQuery",
+    "HashnodeArticle",
+    "HashnodeAuthor",
+    "CodePenPen",
+    "CodePenUser",
+    "MediumArticle",
+    "MediumAuthor",
 ]

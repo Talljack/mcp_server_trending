@@ -26,6 +26,9 @@ from .aggregation import AggregationFetcher
 from .arxiv import ArxivFetcher
 from .semanticscholar import SemanticScholarFetcher
 from .openreview import OpenReviewFetcher
+from .hashnode import HashnodeFetcher
+from .codepen import CodePenFetcher
+from .medium import MediumFetcher
 
 __all__ = [
     "BaseFetcher",
@@ -54,4 +57,7 @@ __all__ = [
     "ArxivFetcher",
     "SemanticScholarFetcher",
     "OpenReviewFetcher",
+    "HashnodeFetcher",
+    "CodePenFetcher",
+    "MediumFetcher",
 ]
