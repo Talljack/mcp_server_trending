@@ -114,7 +114,9 @@ class NPMFetcher(BaseFetcher):
             objects = data.get("objects", [])
 
             # Fetch download stats for all packages in parallel
-            package_names = [obj.get("package", {}).get("name") for obj in objects if obj.get("package")]
+            package_names = [
+                obj.get("package", {}).get("name") for obj in objects if obj.get("package")
+            ]
 
             # Get download stats
             download_stats = await self._fetch_download_stats(package_names, time_range)

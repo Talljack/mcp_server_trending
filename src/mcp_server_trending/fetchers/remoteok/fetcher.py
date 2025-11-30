@@ -108,7 +108,9 @@ class RemoteOKFetcher(BaseFetcher):
             if "text/html" in content_type or "text/plain" in content_type:
                 text = response.text
                 if "VPN" in text or "vpn" in text:
-                    raise Exception("RemoteOK is blocking VPN/proxy access. Please disable VPN or use a different network.")
+                    raise Exception(
+                        "RemoteOK is blocking VPN/proxy access. Please disable VPN or use a different network."
+                    )
                 raise Exception(f"Unexpected response type: {content_type}")
 
             # Parse JSON response
@@ -139,7 +141,9 @@ class RemoteOKFetcher(BaseFetcher):
                 "api_version": "2025-11",
             }
 
-            logger.info(f"Successfully fetched {len(jobs)} jobs from RemoteOK API (filtered from {len(jobs_data)} total)")
+            logger.info(
+                f"Successfully fetched {len(jobs)} jobs from RemoteOK API (filtered from {len(jobs_data)} total)"
+            )
 
             return self._create_response(
                 success=True,

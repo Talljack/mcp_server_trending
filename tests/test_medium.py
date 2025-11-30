@@ -46,9 +46,7 @@ async def test_medium_different_tags():
     tags = ["ai", "technology", "javascript"]
 
     for tag in tags:
-        response = await fetcher.fetch_tag_articles(
-            tag=tag, limit=3, use_cache=False
-        )
+        response = await fetcher.fetch_tag_articles(tag=tag, limit=3, use_cache=False)
 
         assert response.success, f"Fetch with tag={tag} should succeed"
         assert response.metadata.get("tag") == tag, f"Should include {tag} in metadata"
@@ -85,9 +83,7 @@ async def test_medium_user_articles():
     fetcher = MediumFetcher()
 
     # Test with a user (should handle @ prefix)
-    response = await fetcher.fetch_user_articles(
-        username="medium", limit=5, use_cache=False
-    )
+    response = await fetcher.fetch_user_articles(username="medium", limit=5, use_cache=False)
 
     # Should succeed or fail gracefully
     assert isinstance(response.success, bool), "Should have success flag"
@@ -101,9 +97,7 @@ async def test_medium_article_structure():
     """Test Medium article data structure."""
     fetcher = MediumFetcher()
 
-    response = await fetcher.fetch_tag_articles(
-        tag="programming", limit=1, use_cache=False
-    )
+    response = await fetcher.fetch_tag_articles(tag="programming", limit=1, use_cache=False)
 
     assert response.success, "Fetch should succeed"
     if response.data:
@@ -137,15 +131,11 @@ async def test_medium_caching():
     fetcher = MediumFetcher(cache=cache)
 
     # First fetch
-    response1 = await fetcher.fetch_tag_articles(
-        tag="ai", limit=3, use_cache=True
-    )
+    response1 = await fetcher.fetch_tag_articles(tag="ai", limit=3, use_cache=True)
     assert response1.success, "First fetch should succeed"
 
     # Second fetch (should use cache)
-    response2 = await fetcher.fetch_tag_articles(
-        tag="ai", limit=3, use_cache=True
-    )
+    response2 = await fetcher.fetch_tag_articles(tag="ai", limit=3, use_cache=True)
     assert response2.success, "Second fetch should succeed"
 
     # Data should be identical if cached
@@ -178,9 +168,7 @@ async def test_medium_fallback_data():
     fetcher = MediumFetcher()
 
     # This will likely use fallback data due to API restrictions
-    response = await fetcher.fetch_tag_articles(
-        tag="test", limit=5, use_cache=False
-    )
+    response = await fetcher.fetch_tag_articles(tag="test", limit=5, use_cache=False)
 
     assert response.success, "Fallback fetch should succeed"
     assert len(response.data) > 0, "Fallback should return data"

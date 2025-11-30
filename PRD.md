@@ -20,7 +20,7 @@
 
 ## 2. 核心功能模块
 
-### 2.1 榜单资源列表（已实现：22个平台，37个工具）
+### 2.1 榜单资源列表（已实现：29个平台，45个工具）
 
 #### 2.1.1 技术社区与讨论类
 
@@ -181,7 +181,46 @@
       - 使用正常的家庭/办公网络
       - 或等待一段时间后重试
 
-#### 2.1.6 聚合分析工具
+20. **We Work Remotely** ✅ 已实现
+    - 远程工作职位列表
+    - 支持多种分类：programming, design, devops, management, sales, customer-support, finance, product
+    - RSS 数据源，稳定可靠
+
+21. **Lobsters** ✅ 已实现
+    - 高质量技术社区（类似 Hacker News）
+    - 热门文章、最新文章
+    - 按标签筛选（python, javascript, ai, rust, security 等）
+    - JSON API，无需认证
+
+22. **Echo JS** ✅ 已实现
+    - JavaScript 和前端新闻社区
+    - 最新新闻、热门新闻
+    - 专注于 JS/前端生态
+
+#### 2.1.7 研究与学术类
+
+23. **Papers with Code** ✅ 已实现
+    - ML/AI 研究论文（via HuggingFace Daily Papers）
+    - 热门论文、最新论文
+    - 按关键词搜索（transformer, diffusion, llm 等）
+
+24. **AlternativeTo** ✅ 已实现
+    - 软件替代品推荐
+    - 按平台筛选（Windows, Mac, Linux, Android, iPhone, Web）
+    - 搜索特定软件的替代品
+    - 精选数据（Cloudflare 保护）
+
+25. **Replicate** ✅ 已实现
+    - AI 模型 API 平台
+    - 热门模型、按类别筛选
+    - 支持 text-to-image, language-models, audio, video, 3d, upscalers 等
+
+26. **Betalist** ✅ 已实现
+    - 早期创业项目发现平台
+    - 精选项目、最新项目
+    - 按主题筛选（ai, saas, fintech, productivity 等）
+
+#### 2.1.8 聚合分析工具
 
 20. **Tech Stack Analysis** ✅ 已实现
     - 跨平台技术栈流行度分析
@@ -321,7 +360,7 @@ mcp-server-trending/
 }
 ```
 
-## 4. 核心 MCP Tools 列表（已实现：37个工具）
+## 4. 核心 MCP Tools 列表（已实现：45个工具）
 
 ### 4.1 GitHub 相关 (2个工具)
 - `get_github_trending_repos` ✅ - 获取 Trending 仓库

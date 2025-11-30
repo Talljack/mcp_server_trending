@@ -13,31 +13,38 @@ from .config import config
 from .fetchers import (
     AggregationFetcher,
     AIToolsFetcher,
+    AlternativeToFetcher,
     ArxivFetcher,
     AwesomeFetcher,
+    BetalistFetcher,
     ChromeWebStoreFetcher,
     CodePenFetcher,
     DevToFetcher,
+    EchoJSFetcher,
     GitHubTrendingFetcher,
     HackerNewsFetcher,
     HashnodeFetcher,
     HuggingFaceFetcher,
     IndieHackersFetcher,
     JuejinFetcher,
+    LobstersFetcher,
     MediumFetcher,
     ModelScopeFetcher,
     NPMFetcher,
     OpenReviewFetcher,
     OpenRouterFetcher,
+    PapersWithCodeFetcher,
     ProductHuntFetcher,
     PyPIFetcher,
-    RemoteOKFetcher,
     # RedditFetcher,  # Disabled: Requires Reddit API credentials
+    RemoteOKFetcher,
+    ReplicateFetcher,
     SemanticScholarFetcher,
     StackOverflowFetcher,
     TrustMRRFetcher,
     V2EXFetcher,
     VSCodeMarketplaceFetcher,
+    WeWorkRemotelyFetcher,
     WordPressFetcher,
 )
 from .utils import SimpleCache, logger, setup_logger
@@ -85,14 +92,23 @@ class TrendingMCPServer:
         self.codepen_fetcher = CodePenFetcher(cache=self.cache)
         self.medium_fetcher = MediumFetcher(cache=self.cache)
 
+        # New fetchers for Lobsters, Echo JS, We Work Remotely
+        self.lobsters_fetcher = LobstersFetcher(cache=self.cache)
+        self.echojs_fetcher = EchoJSFetcher(cache=self.cache)
+        self.weworkremotely_fetcher = WeWorkRemotelyFetcher(cache=self.cache)
+
+        # New fetchers for Papers with Code, AlternativeTo, Replicate, Betalist
+        self.paperswithcode_fetcher = PapersWithCodeFetcher(cache=self.cache)
+        self.alternativeto_fetcher = AlternativeToFetcher(cache=self.cache)
+        self.replicate_fetcher = ReplicateFetcher(cache=self.cache)
+        self.betalist_fetcher = BetalistFetcher(cache=self.cache)
+
         # Research paper fetchers with longer cache TTL (papers update slowly)
         # All paper platforms: 24 hours cache - papers and citations update slowly
         paper_cache_ttl = 86400  # 24 hours
         self.arxiv_fetcher = ArxivFetcher(cache=self.cache, cache_ttl=paper_cache_ttl)
         self.semanticscholar_fetcher = SemanticScholarFetcher(
-            cache=self.cache,
-            cache_ttl=paper_cache_ttl,
-            api_key=config.semanticscholar_api_key
+            cache=self.cache, cache_ttl=paper_cache_ttl, api_key=config.semanticscholar_api_key
         )
         self.openreview_fetcher = OpenReviewFetcher(cache=self.cache, cache_ttl=paper_cache_ttl)
 
@@ -127,7 +143,7 @@ class TrendingMCPServer:
                 # GitHub Tools
                 Tool(
                     name="get_github_trending_repos",
-                    description="Get GitHub trending repositories. Supports filtering by programming language and time range.",
+                    description="Get GitHub trending repositories. Supports filtering by programming language and time range. Use this when user asks about popular/trending/hot repos on GitHub.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -135,27 +151,27 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["daily", "weekly", "monthly"],
                                 "default": "daily",
-                                "description": "Time range for trending data",
+                                "description": "Time range for trending data. Use 'daily' for today/24h, 'weekly' for this week/7 days/past week, 'monthly' for this month/30 days/past month. Default is daily.",
                             },
                             "language": {
                                 "type": "string",
-                                "description": "Filter by programming language (e.g., python, javascript, go)",
+                                "description": "Programming language filter. Examples: 'python', 'javascript', 'typescript', 'go', 'rust', 'java', 'c++', 'c#', 'ruby', 'php', 'swift', 'kotlin'. Leave empty for all languages.",
                             },
                             "spoken_language": {
                                 "type": "string",
-                                "description": "Filter by spoken language (e.g., en, zh)",
+                                "description": "Spoken/natural language filter. Examples: 'en' for English, 'zh' for Chinese, 'ja' for Japanese, 'ko' for Korean, 'es' for Spanish. Leave empty for all.",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data",
+                                "description": "Whether to use cached data. Set to false for real-time fresh data.",
                             },
                         },
                     },
                 ),
                 Tool(
                     name="get_github_trending_developers",
-                    description="Get GitHub trending developers. Supports filtering by programming language and time range.",
+                    description="Get GitHub trending developers/contributors. Use this when user asks about popular developers, top contributors, or influential programmers on GitHub.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -163,16 +179,16 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["daily", "weekly", "monthly"],
                                 "default": "daily",
-                                "description": "Time range for trending data",
+                                "description": "Time range for trending data. Use 'daily' for today/24h, 'weekly' for this week/7 days, 'monthly' for this month/30 days.",
                             },
                             "language": {
                                 "type": "string",
-                                "description": "Filter by programming language (e.g., python, javascript, go)",
+                                "description": "Programming language filter. Examples: 'python', 'javascript', 'rust', 'go'. Leave empty for all languages.",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data",
+                                "description": "Whether to use cached data.",
                             },
                         },
                     },
@@ -180,7 +196,7 @@ class TrendingMCPServer:
                 # Hacker News Tools
                 Tool(
                     name="get_hackernews_stories",
-                    description="Get Hacker News stories. Supports different story types: top, best, new, ask (Ask HN), show (Show HN), and job.",
+                    description="Get Hacker News stories. Use this for tech news, startup discussions, programming articles. Supports different story types.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -188,19 +204,19 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["top", "best", "new", "ask", "show", "job"],
                                 "default": "top",
-                                "description": "Type of stories to fetch",
+                                "description": "Type of stories: 'top' for front page/trending, 'best' for highest voted/all-time best, 'new' for latest/newest/recent, 'ask' for Ask HN questions/discussions, 'show' for Show HN project demos/launches, 'job' for job postings/hiring.",
                             },
                             "limit": {
                                 "type": "integer",
                                 "default": 30,
                                 "minimum": 1,
                                 "maximum": 500,
-                                "description": "Number of stories to fetch",
+                                "description": "Number of stories to fetch. Use 10-30 for quick overview, 50-100 for comprehensive list.",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data",
+                                "description": "Whether to use cached data.",
                             },
                         },
                     },
@@ -208,7 +224,7 @@ class TrendingMCPServer:
                 # Product Hunt Tools
                 Tool(
                     name="get_producthunt_products",
-                    description="Get Product Hunt products. Supports different time ranges: today, week, month.",
+                    description="Get Product Hunt products. Use this for new product launches, startup products, tech tools. Great for discovering new apps and services.",
                     inputSchema={
                         "type": "object",
                         "properties": {
@@ -216,16 +232,16 @@ class TrendingMCPServer:
                                 "type": "string",
                                 "enum": ["today", "week", "month"],
                                 "default": "today",
-                                "description": "Time range for products",
+                                "description": "Time range: 'today' for today's launches/daily, 'week' for this week's top products/weekly best, 'month' for this month's top products/monthly best.",
                             },
                             "topic": {
                                 "type": "string",
-                                "description": "Filter by topic (e.g., 'Developer Tools', 'AI')",
+                                "description": "Filter by topic/category. Examples: 'Developer Tools', 'AI', 'Productivity', 'Design Tools', 'Marketing', 'SaaS', 'Mobile Apps', 'Chrome Extensions'. Leave empty for all topics.",
                             },
                             "use_cache": {
                                 "type": "boolean",
                                 "default": True,
-                                "description": "Whether to use cached data",
+                                "description": "Whether to use cached data.",
                             },
                         },
                     },
@@ -1226,6 +1242,413 @@ class TrendingMCPServer:
                         "required": ["topic"],
                     },
                 ),
+                # Lobsters Tools
+                Tool(
+                    name="get_lobsters_hottest",
+                    description="Get hottest/trending stories from Lobsters. A computing-focused community with high-quality technical content, similar to Hacker News but more focused on programming and systems.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 25,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of stories to fetch. Use 10-25 for quick overview.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_lobsters_newest",
+                    description="Get newest/latest stories from Lobsters. Fresh technical content from the computing community.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 25,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of stories to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_lobsters_by_tag",
+                    description="Get Lobsters stories filtered by programming language or topic tag.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "tag": {
+                                "type": "string",
+                                "description": "Tag to filter. Examples: 'python', 'javascript', 'rust', 'go', 'c', 'java', 'ai', 'ml', 'security', 'linux', 'databases', 'devops', 'web', 'networking', 'programming', 'plt' (programming language theory).",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 25,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of stories to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["tag"],
+                    },
+                ),
+                # Echo JS Tools
+                Tool(
+                    name="get_echojs_latest",
+                    description="Get latest JavaScript/front-end news from Echo JS. Use this for JS news, React, Vue, Angular, Node.js, TypeScript, HTML5, CSS news and tutorials.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of news items to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_echojs_top",
+                    description="Get top/trending/popular JavaScript news from Echo JS. Most upvoted JavaScript and front-end content.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of news items to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                # We Work Remotely Tools
+                Tool(
+                    name="get_weworkremotely_jobs",
+                    description="Get remote job listings from We Work Remotely. Use this for remote work opportunities, work from home jobs, distributed team positions in tech.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "programming",
+                                    "design",
+                                    "devops",
+                                    "management",
+                                    "sales",
+                                    "customer-support",
+                                    "finance",
+                                    "product",
+                                    "all",
+                                ],
+                                "default": "programming",
+                                "description": "Job category: 'programming' for software/web/mobile dev, 'design' for UI/UX/graphic design, 'devops' for DevOps/SRE/infrastructure, 'management' for project/product managers, 'sales' for sales/business dev, 'customer-support' for support roles, 'finance' for finance/accounting, 'product' for product roles, 'all' for all categories.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of jobs to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                # Papers with Code Tools (via HuggingFace Daily Papers)
+                Tool(
+                    name="get_paperswithcode_trending",
+                    description="Get trending ML/AI research papers with code. Use this for latest AI research, machine learning papers, deep learning advances. Data from HuggingFace Daily Papers.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of papers to fetch. Use 10-20 for quick overview, 50+ for comprehensive research.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_paperswithcode_latest",
+                    description="Get latest ML/AI research papers. Most recently published papers with code implementations.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of papers to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="search_paperswithcode",
+                    description="Search ML/AI research papers by keyword. Find papers on specific topics like transformers, diffusion models, LLMs, computer vision, NLP.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search keyword. Examples: 'transformer', 'diffusion', 'llm', 'large language model', 'gpt', 'vision', 'multimodal', 'reinforcement learning', 'neural network', 'attention mechanism'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 50,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of papers to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                # AlternativeTo Tools
+                Tool(
+                    name="get_alternativeto_trending",
+                    description="Get trending/popular software alternatives. Use this to discover popular apps, open-source alternatives, free software options across different platforms.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "platform": {
+                                "type": "string",
+                                "enum": [
+                                    "all",
+                                    "windows",
+                                    "mac",
+                                    "linux",
+                                    "android",
+                                    "iphone",
+                                    "web",
+                                ],
+                                "default": "all",
+                                "description": "Platform filter: 'all' for cross-platform, 'windows' for Windows apps, 'mac' for macOS apps, 'linux' for Linux apps, 'android' for Android apps, 'iphone' for iOS apps, 'web' for web-based apps/SaaS.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of apps to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="search_alternativeto",
+                    description="Find alternatives to specific software. Use this when user asks 'what can I use instead of X' or 'alternatives to X' or 'free version of X'.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Software name to find alternatives for. Examples: 'photoshop' (image editing), 'slack' (team chat), 'notion' (notes), 'figma' (design), 'vscode' (code editor), 'zoom' (video calls), 'trello' (project management).",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of alternatives to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                # Replicate Tools
+                Tool(
+                    name="get_replicate_trending",
+                    description="Get trending AI models from Replicate. Use this for popular ML models that can be run via API - image generation, LLMs, audio, video models.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_replicate_collection",
+                    description="Get AI models from a specific Replicate collection. Use this when user asks about specific types of AI models.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "collection": {
+                                "type": "string",
+                                "enum": [
+                                    "text-to-image",
+                                    "image-to-image",
+                                    "language-models",
+                                    "audio",
+                                    "video",
+                                    "3d",
+                                    "upscalers",
+                                ],
+                                "default": "text-to-image",
+                                "description": "Model collection: 'text-to-image' for image generation/AI art (Stable Diffusion, DALL-E, Midjourney style), 'image-to-image' for image editing/transformation, 'language-models' for LLMs/text generation/chatbots, 'audio' for speech/music/voice models, 'video' for video generation/editing, '3d' for 3D model generation, 'upscalers' for image upscaling/enhancement.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of models to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                # Betalist Tools
+                Tool(
+                    name="get_betalist_featured",
+                    description="Get featured startups from Betalist. Use this for discovering new startups, early-stage products, beta launches, indie projects.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of startups to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_betalist_latest",
+                    description="Get latest/newest startups from Betalist. Most recently submitted startups and beta products.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of startups to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_betalist_by_topic",
+                    description="Get startups by topic/category from Betalist. Filter startups by industry or type.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "topic": {
+                                "type": "string",
+                                "description": "Topic/category to filter. Examples: 'ai' for AI/ML startups, 'saas' for SaaS products, 'fintech' for financial tech, 'productivity' for productivity tools, 'developer-tools' for dev tools, 'marketing' for marketing tools, 'ecommerce' for e-commerce, 'health' for healthcare/wellness.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 100,
+                                "description": "Number of startups to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["topic"],
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -1633,6 +2056,135 @@ class TrendingMCPServer:
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
 
+                # Lobsters Tools
+                elif name == "get_lobsters_hottest":
+                    response = await self.lobsters_fetcher.fetch_hottest(
+                        limit=arguments.get("limit", 25),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_lobsters_newest":
+                    response = await self.lobsters_fetcher.fetch_newest(
+                        limit=arguments.get("limit", 25),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_lobsters_by_tag":
+                    tag = arguments.get("tag")
+                    if not tag:
+                        raise ValueError("tag parameter is required")
+                    response = await self.lobsters_fetcher.fetch_by_tag(
+                        tag=tag,
+                        limit=arguments.get("limit", 25),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Echo JS Tools
+                elif name == "get_echojs_latest":
+                    response = await self.echojs_fetcher.fetch_latest(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_echojs_top":
+                    response = await self.echojs_fetcher.fetch_top(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # We Work Remotely Tools
+                elif name == "get_weworkremotely_jobs":
+                    response = await self.weworkremotely_fetcher.fetch_jobs(
+                        category=arguments.get("category", "programming"),
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Papers with Code Tools
+                elif name == "get_paperswithcode_trending":
+                    response = await self.paperswithcode_fetcher.fetch_trending_papers(
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_paperswithcode_latest":
+                    response = await self.paperswithcode_fetcher.fetch_latest_papers(
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "search_paperswithcode":
+                    response = await self.paperswithcode_fetcher.search_papers(
+                        query=arguments.get("query", ""),
+                        limit=arguments.get("limit", 50),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # AlternativeTo Tools
+                elif name == "get_alternativeto_trending":
+                    response = await self.alternativeto_fetcher.fetch_trending(
+                        platform=arguments.get("platform", "all"),
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "search_alternativeto":
+                    response = await self.alternativeto_fetcher.search_alternatives(
+                        query=arguments.get("query", ""),
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Replicate Tools
+                elif name == "get_replicate_trending":
+                    response = await self.replicate_fetcher.fetch_trending_models(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_replicate_collection":
+                    response = await self.replicate_fetcher.fetch_collection(
+                        collection=arguments.get("collection", "text-to-image"),
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Betalist Tools
+                elif name == "get_betalist_featured":
+                    response = await self.betalist_fetcher.fetch_featured(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_betalist_latest":
+                    response = await self.betalist_fetcher.fetch_latest(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_betalist_by_topic":
+                    response = await self.betalist_fetcher.fetch_by_topic(
+                        topic=arguments.get("topic", ""),
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
                 else:
                     raise ValueError(f"Unknown tool: {name}")
 
@@ -1691,6 +2243,13 @@ class TrendingMCPServer:
         await self.pypi_fetcher.close()
         await self.remoteok_fetcher.close()
         await self.wordpress_fetcher.close()
+        await self.lobsters_fetcher.close()
+        await self.echojs_fetcher.close()
+        await self.weworkremotely_fetcher.close()
+        await self.paperswithcode_fetcher.close()
+        await self.alternativeto_fetcher.close()
+        await self.replicate_fetcher.close()
+        await self.betalist_fetcher.close()
 
 
 async def main():

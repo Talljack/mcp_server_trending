@@ -122,7 +122,9 @@ class CodePenFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching CodePen picked pens: {e}")
-            return self._create_response(success=False, data_type="picked_pens", data=[], error=str(e))
+            return self._create_response(
+                success=False, data_type="picked_pens", data=[], error=str(e)
+            )
 
     async def fetch_recent_pens(
         self,
@@ -170,7 +172,9 @@ class CodePenFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching CodePen recent pens: {e}")
-            return self._create_response(success=False, data_type="recent_pens", data=[], error=str(e))
+            return self._create_response(
+                success=False, data_type="recent_pens", data=[], error=str(e)
+            )
 
     def _get_fallback_popular_pens(self) -> list[CodePenPen]:
         """Get fallback data for popular pens."""

@@ -40,10 +40,17 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 - 🔌 **Chrome Extensions** - Chrome Web Store 热门扩展
 - 🐍 **PyPI Packages** - Python 包热门排行
 - 💼 **RemoteOK Jobs** - 远程工作机会
+- 💼 **We Work Remotely** - 全球最大远程工作社区
+- 🦞 **Lobsters** - 高质量技术社区（类似 Hacker News）
+- 📜 **Echo JS** - JavaScript 和前端新闻社区
 - 🔌 **WordPress Plugins** - WordPress 插件目录
 - 📄 **arXiv Papers** - 科研论文预印本平台
 - 🎓 **Semantic Scholar** - AI 驱动的学术搜索引擎
 - 🏆 **OpenReview** - ML 会议论文评审平台
+- 📚 **Papers with Code** - ML/AI 研究论文（via HuggingFace Daily Papers）
+- 🔄 **AlternativeTo** - 软件替代品推荐
+- 🤖 **Replicate** - AI 模型 API 平台
+- 🚀 **Betalist** - 早期创业项目发现
 - 🔬 **Aggregation Analysis** - 跨平台聚合分析工具
 
 > 专为独立开发者、Indie Hackers 和技术创业者设计
@@ -823,10 +830,17 @@ WordPress 有哪些热门的 SEO 插件？
 | **Chrome Extensions** | 浏览器扩展（精选数据）| ✅ 完全可用 | ❌ 不需要 |
 | **PyPI Packages** | Python 包下载排行 | ✅ 完全可用 | ❌ 不需要 |
 | **RemoteOK Jobs** | 远程工作职位 | ✅ 完全可用* | ❌ 不需要 |
+| **We Work Remotely** | 远程工作职位 | ✅ 完全可用 | ❌ 不需要 |
+| **Lobsters** | 技术社区 | ✅ 完全可用 | ❌ 不需要 |
+| **Echo JS** | JavaScript 新闻 | ✅ 完全可用 | ❌ 不需要 |
 | **WordPress Plugins** | WordPress 插件 | ✅ 完全可用 | ❌ 不需要 |
 | **arXiv Papers** | 科研论文预印本 | ✅ 完全可用 | ❌ 不需要 |
 | **Semantic Scholar** | 学术搜索引擎 | ✅ 完全可用 | ❌ 不需要 |
 | **OpenReview** | ML 会议论文评审 | ✅ 完全可用 | ❌ 不需要 |
+| **Papers with Code** | ML/AI 研究论文 | ✅ 完全可用 | ❌ 不需要 |
+| **AlternativeTo** | 软件替代品 | ✅ 精选数据 | ❌ 不需要 |
+| **Replicate** | AI 模型平台 | ✅ 完全可用 | ❌ 不需要 |
+| **Betalist** | 早期创业项目 | ✅ 完全可用 | ❌ 不需要 |
 
 > \* **说明**：
 > - Product Hunt 需要配置 API credentials 才能获取真实数据，否则返回占位数据和配置指引
@@ -838,7 +852,7 @@ WordPress 有哪些热门的 SEO 插件？
 >     - 使用非数据中心 IP（家庭网络、手机热点等）
 >     - 代码已实现智能降级：API 失败时自动尝试网页抓取
 
-### 可用工具 (34个)
+### 可用工具 (45个)
 
 **GitHub** (2个)
 - `get_github_trending_repos` - 获取 GitHub trending 仓库
@@ -903,13 +917,41 @@ WordPress 有哪些热门的 SEO 插件？
 **RemoteOK Jobs** (1个) 💼
 - `get_remote_jobs` - 获取远程工作职位
 
+**We Work Remotely** (1个) 💼
+- `get_weworkremotely_jobs` - 获取远程工作职位（支持多种分类：programming, design, devops 等）
+
+**Lobsters** (3个) 🦞
+- `get_lobsters_hottest` - 获取最热门的技术文章
+- `get_lobsters_newest` - 获取最新的技术文章
+- `get_lobsters_by_tag` - 按标签筛选文章（python, javascript, ai, rust 等）
+
+**Echo JS** (2个) 📜
+- `get_echojs_latest` - 获取最新 JavaScript 新闻
+- `get_echojs_top` - 获取热门 JavaScript 新闻
+
 **WordPress Plugins** (1个) 🔌
 - `get_wordpress_plugins` - 获取 WordPress 插件目录热门插件
 
-**Research Papers** (3个) 📄
+**Research Papers** (6个) 📄
 - `get_arxiv_papers` - 获取 arXiv 科研论文（支持分类、关键词搜索）
 - `search_semantic_scholar` - 搜索 Semantic Scholar 学术论文（AI 驱动、引用指标）
 - `get_openreview_papers` - 获取 OpenReview ML 会议论文（ICLR、NeurIPS、ICML 等）
+- `get_paperswithcode_trending` - 获取热门 ML/AI 研究论文
+- `get_paperswithcode_latest` - 获取最新 ML/AI 研究论文
+- `search_paperswithcode` - 搜索 ML/AI 研究论文（transformer、diffusion、llm 等）
+
+**AlternativeTo** (2个) 🔄
+- `get_alternativeto_trending` - 获取热门软件替代品（按平台筛选）
+- `search_alternativeto` - 搜索特定软件的替代品（如 photoshop、slack）
+
+**Replicate** (2个) 🤖
+- `get_replicate_trending` - 获取热门 AI 模型
+- `get_replicate_collection` - 获取特定类别 AI 模型（text-to-image、language-models 等）
+
+**Betalist** (3个) 🚀
+- `get_betalist_featured` - 获取精选早期创业项目
+- `get_betalist_latest` - 获取最新早期创业项目
+- `get_betalist_by_topic` - 按主题获取创业项目（ai、saas、fintech 等）
 
 **Aggregation Analysis** (3个) 🔬
 - `analyze_tech_stack` - 跨平台技术栈分析（GitHub + npm + PyPI + Stack Overflow + VS Code + Jobs）

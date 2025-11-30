@@ -96,9 +96,7 @@ class AggregationFetcher(BaseFetcher):
                     if response.success:
                         # Count tags matching the tech name
                         matching_tags = [
-                            tag
-                            for tag in response.data
-                            if tech.lower() in tag.name.lower()
+                            tag for tag in response.data if tech.lower() in tag.name.lower()
                         ]
                         if matching_tags:
                             analysis.stackoverflow_questions = sum(
@@ -225,7 +223,11 @@ class AggregationFetcher(BaseFetcher):
                     if hasattr(proj, "revenue") and proj.revenue:
                         # Ensure revenue is numeric
                         try:
-                            revenue_value = float(proj.revenue) if isinstance(proj.revenue, (str, int, float)) else 0
+                            revenue_value = (
+                                float(proj.revenue)
+                                if isinstance(proj.revenue, (str, int, float))
+                                else 0
+                            )
                             if revenue_value > 0:
                                 mrr_values.append(revenue_value)
                         except (ValueError, TypeError):
@@ -239,7 +241,11 @@ class AggregationFetcher(BaseFetcher):
                 for proj in all_projects:
                     if hasattr(proj, "revenue") and proj.revenue:
                         try:
-                            revenue_value = float(proj.revenue) if isinstance(proj.revenue, (str, int, float)) else 0
+                            revenue_value = (
+                                float(proj.revenue)
+                                if isinstance(proj.revenue, (str, int, float))
+                                else 0
+                            )
                             if revenue_value > 10000:
                                 success_count += 1
                         except (ValueError, TypeError):
@@ -306,9 +312,7 @@ class AggregationFetcher(BaseFetcher):
                     if response.success:
                         # Count stories mentioning the topic
                         matching_stories = [
-                            story
-                            for story in response.data
-                            if topic.lower() in story.title.lower()
+                            story for story in response.data if topic.lower() in story.title.lower()
                         ]
                         trends.hackernews_mentions = len(matching_stories)
                 except Exception as e:
@@ -341,9 +345,7 @@ class AggregationFetcher(BaseFetcher):
                     if response.success:
                         # Find matching tags
                         matching_tags = [
-                            tag
-                            for tag in response.data
-                            if topic.lower() in tag.name.lower()
+                            tag for tag in response.data if topic.lower() in tag.name.lower()
                         ]
                         if matching_tags:
                             trends.stackoverflow_tags = sum(tag.count for tag in matching_tags[:3])
