@@ -52,23 +52,127 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 
 ## ⚡ 快速开始
 
-### 方式一：使用 Smithery 安装（推荐）
+### 方式一：使用 Smithery 安装（推荐 - 最简单）
 
-[Smithery](https://smithery.ai/) 是一个 MCP 服务器管理平台，可以一键安装到任何支持的客户端。
+[Smithery](https://smithery.ai/) 是一个 MCP 服务器管理平台，可以一键安装并配置到任何支持的客户端。
 
 ```bash
 npx -y @smithery/cli install mcp-server-trending --client <CLIENT_NAME>
 ```
 
-支持的客户端：`claude-desktop`、`cursor`、`cline`、`windsurf`、`zed` 等
+**支持的客户端**：`claude-desktop`、`cursor`、`cline`、`windsurf`、`zed` 等
+
+**Smithery 会自动帮你完成**：
+- ✅ 安装 `mcp-server-trending` 包（使用 pipx）
+- ✅ 写入客户端配置文件
+- ✅ 使用绝对路径配置（自动解决 PATH 问题）
+
+**安装后无需任何额外操作**，重启客户端即可使用！
+
+> **💡 提示**：Smithery 会自动在配置中使用绝对路径，所以不需要手动创建符号链接。这是最省心的安装方式。
 
 ### 方式二：从 PyPI 安装
 
+> ⚠️ **重要提示**：
+> - **Windows**：安装后可直接使用 `"command": "mcp-server-trending"`
+> - **macOS/Linux**：需要创建符号链接或使用绝对路径（见下方步骤）
+
+**推荐使用 pipx**（跨平台支持）：
+
+<details>
+<summary><b>🍎 macOS 安装步骤</b></summary>
+
+```bash
+# 1. 安装 pipx
+brew install pipx
+pipx ensurepath
+
+# 2. 安装 mcp-server-trending
+pipx install mcp-server-trending
+
+# 3. 创建系统符号链接（重要！让 Cursor 等 GUI 应用能找到命令）
+sudo ln -sf ~/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending /usr/local/bin/mcp-server-trending
+
+# 4. 验证
+which mcp-server-trending  # 应该显示：/usr/local/bin/mcp-server-trending
+```
+
+完成后，配置文件中可以直接使用：
+```json
+{
+  "command": "mcp-server-trending"
+}
+```
+
+</details>
+
+<details>
+<summary><b>🐧 Linux 安装步骤</b></summary>
+
+```bash
+# 1. 安装 pipx
+# Ubuntu/Debian:
+sudo apt install pipx
+# 或使用 pip:
+python3 -m pip install --user pipx
+
+# 2. 配置 PATH
+pipx ensurepath
+
+# 3. 安装 mcp-server-trending
+pipx install mcp-server-trending
+
+# 4. 创建系统符号链接（重要！让 GUI 应用能找到命令）
+sudo ln -sf ~/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending /usr/local/bin/mcp-server-trending
+
+# 5. 验证
+which mcp-server-trending  # 应该显示：/usr/local/bin/mcp-server-trending
+```
+
+完成后，配置文件中可以直接使用：
+```json
+{
+  "command": "mcp-server-trending"
+}
+```
+
+</details>
+
+<details>
+<summary><b>🪟 Windows 安装步骤</b></summary>
+
+```powershell
+# 1. 安装 pipx
+python -m pip install --user pipx
+python -m pipx ensurepath
+
+# 2. 安装 mcp-server-trending
+pipx install mcp-server-trending
+
+# 3. 重启终端或注销重新登录
+# Windows 会自动将命令添加到 PATH
+```
+
+完成后，配置文件中可以直接使用：
+```json
+{
+  "command": "mcp-server-trending"
+}
+```
+
+</details>
+
+**或使用 pip**（需要配置虚拟环境）：
 ```bash
 pip install mcp-server-trending
 ```
 
-> **注意**：首次发布前，请使用方式三从源码安装
+> **💡 为什么需要创建符号链接（macOS/Linux）？**
+>
+> GUI 应用（Cursor、Claude Desktop 等）启动时不会读取 shell 配置文件（`~/.zshrc`、`~/.bashrc`），
+> 因此无法找到 `~/.local/bin` 中的命令。创建符号链接到 `/usr/local/bin` 可以解决这个问题。
+>
+> **如果不想创建符号链接**，也可以在配置中使用绝对路径（详见下方"配置 AI 客户端"部分）。
 
 ### 方式三：从源码安装
 
@@ -79,6 +183,23 @@ bash install.sh
 ```
 
 **就这么简单！** 🎉 脚本会自动完成所有配置。
+
+---
+
+## 🤔 安装方式对比
+
+不知道选哪个？看这里：
+
+| 安装方式 | 难度 | 优点 | 缺点 | 推荐场景 |
+|---------|------|------|------|---------|
+| **方式一：Smithery** | ⭐ 最简单 | • 一条命令完成<br>• 自动配置<br>• 自动处理 PATH | • 需要 Node.js | 🎯 **所有用户推荐** |
+| **方式二：PyPI (pipx)** | ⭐⭐ 简单 | • 标准 Python 安装<br>• 灵活配置 | • macOS/Linux 需额外配置<br>• 需手动写配置文件 | Python 开发者 |
+| **方式三：源码** | ⭐⭐⭐ 中等 | • 可修改源码<br>• 开发调试 | • 需要 git<br>• 配置较复杂 | 贡献者、开发者 |
+
+**快速选择指南**：
+- 🚀 **只想快速使用**？→ 方式一（Smithery）
+- 🐍 **是 Python 开发者**？→ 方式二（pipx）
+- 💻 **想贡献代码**？→ 方式三（源码）
 
 ---
 
@@ -166,6 +287,10 @@ claude mcp add trending -- mcp-server-trending
 
 在项目根目录创建 `.cursor/mcp.json`（项目级）或 `~/.cursor/mcp.json`（全局）。查看 [Cursor MCP 文档](https://docs.cursor.com/context/model-context-protocol) 了解更多。
 
+**方式 1：使用命令名（推荐 ✅）**
+
+如果你按照上面的安装步骤创建了系统符号链接，可以直接使用命令名：
+
 ```json
 {
   "mcpServers": {
@@ -173,7 +298,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -182,17 +306,31 @@ claude mcp add trending -- mcp-server-trending
 }
 ```
 
-**注意**：如果是从源码安装，command 需要使用完整路径：
+**方式 2：使用绝对路径（备选方案）**
+
+如果你没有创建符号链接，或者方式 1 不工作，使用绝对路径：
+
 ```json
 {
   "mcpServers": {
     "trending": {
-      "command": "/path/to/mcp_server_trending/.venv/bin/mcp-server-trending",
-      "args": []
+      "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending",
+      "args": [],
+      "env": {
+        "HUGGINGFACE_TOKEN": "your_huggingface_token",
+        "GITHUB_TOKEN": "your_github_token"
+      }
     }
   }
 }
 ```
+
+**路径参考：**
+- **macOS/Linux (pipx)**：`~/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending`
+- **Windows (pipx)**：`C:\Users\YOUR_USERNAME\.local\pipx\venvs\mcp-server-trending\Scripts\mcp-server-trending.exe`
+- **源码安装**：`/path/to/mcp_server_trending/.venv/bin/mcp-server-trending`
+
+> **💡 提示**：在终端运行 `which mcp-server-trending`（Windows: `where mcp-server-trending`）可以找到实际路径
 
 </details>
 
@@ -208,7 +346,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -231,7 +368,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       },
@@ -256,7 +392,6 @@ claude mcp add trending -- mcp-server-trending
       "name": "trending",
       "command": "mcp-server-trending",
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -280,7 +415,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_token",
         "GITHUB_TOKEN": "your_token"
       }
@@ -308,7 +442,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -333,7 +466,6 @@ claude mcp add trending -- mcp-server-trending
   "type": "stdio",
   "command": "mcp-server-trending",
   "env": {
-    
     "HUGGINGFACE_TOKEN": "your_huggingface_token",
     "GITHUB_TOKEN": "your_github_token"
   }
@@ -361,7 +493,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -384,7 +515,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -410,7 +540,6 @@ claude mcp add trending -- mcp-server-trending
     "command": "mcp-server-trending",
     "args": [],
     "env": {
-      
       "HUGGINGFACE_TOKEN": "your_huggingface_token",
       "GITHUB_TOKEN": "your_github_token"
     },
@@ -452,7 +581,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -479,7 +607,6 @@ claude mcp add trending -- mcp-server-trending
       "command": "mcp-server-trending",
       "args": [],
       "env": {
-        
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       },
@@ -587,7 +714,7 @@ echo "HUGGINGFACE_TOKEN=your_token_here" >> .env
     "trending": {
       "command": "mcp-server-trending",
       "env": {
-        
+
         "HUGGINGFACE_TOKEN": "your_huggingface_token",
         "GITHUB_TOKEN": "your_github_token"
       }
@@ -805,6 +932,85 @@ WordPress 有哪些热门的 SEO 插件？
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - 贡献指南
 - **[CHERRY_STUDIO_QUICKSTART.md](CHERRY_STUDIO_QUICKSTART.md)** - Cherry Studio 配置
 - **[PRD.md](PRD.md)** - 产品需求文档
+
+---
+
+## 🐛 疑难解答
+
+<details>
+<summary><b>❌ Cursor 报错：spawn mcp-server-trending ENOENT</b></summary>
+
+**问题**：Cursor 找不到 `mcp-server-trending` 命令
+
+**原因**：macOS/Linux 上的 GUI 应用无法读取用户 shell 配置（`~/.zshrc`、`~/.bashrc`），因此找不到 `~/.local/bin` 中的命令
+
+**解决方案（二选一）**：
+
+**方案 1：创建系统符号链接**（推荐）
+```bash
+# macOS/Linux
+sudo ln -sf ~/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending /usr/local/bin/mcp-server-trending
+```
+
+**方案 2：使用绝对路径**
+在配置文件中使用完整路径：
+```json
+{
+  "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending"
+}
+```
+
+找到实际路径：
+```bash
+# macOS/Linux
+which mcp-server-trending
+ls -la ~/.local/bin/mcp-server-trending
+
+# Windows
+where mcp-server-trending
+```
+
+</details>
+
+<details>
+<summary><b>🔍 如何验证安装是否成功？</b></summary>
+
+```bash
+# 检查命令是否存在
+which mcp-server-trending  # macOS/Linux
+where mcp-server-trending  # Windows
+
+# 检查版本
+mcp-server-trending --version
+
+# 应该输出：mcp-server-trending 0.1.x
+```
+
+</details>
+
+<details>
+<summary><b>🪟 Windows 上 pipx 安装后找不到命令？</b></summary>
+
+1. 运行 `pipx ensurepath`
+2. 重启终端或注销重新登录
+3. 验证 PATH：`echo %PATH%` 应该包含 `C:\Users\YourUsername\.local\bin`
+
+</details>
+
+<details>
+<summary><b>🍎 macOS 上需要 sudo 密码，不想创建系统链接？</b></summary>
+
+你可以直接在配置中使用绝对路径，不需要 sudo：
+
+```json
+{
+  "command": "/Users/YOUR_USERNAME/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending"
+}
+```
+
+用你的实际用户名替换 `YOUR_USERNAME`。
+
+</details>
 
 ---
 
