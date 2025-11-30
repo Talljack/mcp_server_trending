@@ -24,11 +24,7 @@ async def test_openreview_papers():
     print("Test 1: Fetch ICLR 2024 conference papers")
     print("-" * 60)
 
-    response = await fetcher.fetch_papers(
-        venue="iclr2024",
-        limit=10,
-        use_cache=False
-    )
+    response = await fetcher.fetch_papers(venue="iclr2024", limit=10, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Fetched {len(response.data)} papers")
@@ -60,10 +56,7 @@ async def test_openreview_papers():
     print("-" * 60)
 
     response = await fetcher.fetch_papers(
-        venue="iclr2024",
-        content="diffusion",
-        limit=5,
-        use_cache=False
+        venue="iclr2024", content="diffusion", limit=5, use_cache=False
     )
 
     if response.success:
@@ -83,10 +76,7 @@ async def test_openreview_papers():
     print("-" * 60)
 
     response = await fetcher.fetch_papers(
-        venue="iclr2024",
-        decision="Accept",
-        limit=5,
-        use_cache=False
+        venue="iclr2024", decision="Accept", limit=5, use_cache=False
     )
 
     if response.success:
@@ -107,11 +97,7 @@ async def test_openreview_papers():
     print("-" * 60)
 
     for venue in ["iclr2024", "neurips2023"]:
-        response = await fetcher.fetch_papers(
-            venue=venue,
-            limit=3,
-            use_cache=False
-        )
+        response = await fetcher.fetch_papers(venue=venue, limit=3, use_cache=False)
 
         venue_names = {
             "iclr2024": "ICLR 2024",

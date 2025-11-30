@@ -20,10 +20,14 @@ class TechStackAnalysis(BaseModel):
 class IndieRevenueDashboard(BaseModel):
     """Model for indie revenue dashboard."""
 
-    total_projects: int = Field(default=0, description="Total number of revenue-generating projects")
+    total_projects: int = Field(
+        default=0, description="Total number of revenue-generating projects"
+    )
     average_mrr: float = Field(default=0.0, description="Average MRR across projects")
     top_categories: list[str] = Field(default_factory=list, description="Top revenue categories")
-    success_stories_count: int = Field(default=0, description="Number of success stories (>$10k MRR)")
+    success_stories_count: int = Field(
+        default=0, description="Number of success stories (>$10k MRR)"
+    )
     data_sources: list[str] = Field(default_factory=list, description="Data sources used")
     summary: str = Field(default="", description="Dashboard summary")
 

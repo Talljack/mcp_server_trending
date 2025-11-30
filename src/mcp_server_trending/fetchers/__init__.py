@@ -1,34 +1,41 @@
 """Fetchers package."""
 
+from .aggregation import AggregationFetcher
+from .aitools import AIToolsFetcher
+from .alternativeto import AlternativeToFetcher
+from .arxiv import ArxivFetcher
+from .awesome import AwesomeFetcher
 from .base import BaseFetcher
+from .betalist import BetalistFetcher
+from .chrome import ChromeWebStoreFetcher
+from .codepen import CodePenFetcher
+from .devto import DevToFetcher
+from .echojs import EchoJSFetcher
 from .github import GitHubTrendingFetcher
 from .hackernews import HackerNewsFetcher
-from .producthunt import ProductHuntFetcher
-from .indiehackers import IndieHackersFetcher
-from .reddit import RedditFetcher
-from .openrouter import OpenRouterFetcher
-from .trustmrr import TrustMRRFetcher
-from .aitools import AIToolsFetcher
-from .huggingface import HuggingFaceFetcher
-from .v2ex import V2EXFetcher
-from .juejin import JuejinFetcher
-from .devto import DevToFetcher
-from .modelscope import ModelScopeFetcher
-from .stackoverflow import StackOverflowFetcher
-from .awesome import AwesomeFetcher
-from .vscode import VSCodeMarketplaceFetcher
-from .npm import NPMFetcher
-from .chrome import ChromeWebStoreFetcher
-from .pypi import PyPIFetcher
-from .remoteok import RemoteOKFetcher
-from .wordpress import WordPressFetcher
-from .aggregation import AggregationFetcher
-from .arxiv import ArxivFetcher
-from .semanticscholar import SemanticScholarFetcher
-from .openreview import OpenReviewFetcher
 from .hashnode import HashnodeFetcher
-from .codepen import CodePenFetcher
+from .huggingface import HuggingFaceFetcher
+from .indiehackers import IndieHackersFetcher
+from .juejin import JuejinFetcher
+from .lobsters import LobstersFetcher
 from .medium import MediumFetcher
+from .modelscope import ModelScopeFetcher
+from .npm import NPMFetcher
+from .openreview import OpenReviewFetcher
+from .openrouter import OpenRouterFetcher
+from .paperswithcode import PapersWithCodeFetcher
+from .producthunt import ProductHuntFetcher
+from .pypi import PyPIFetcher
+from .reddit import RedditFetcher
+from .remoteok import RemoteOKFetcher
+from .replicate import ReplicateFetcher
+from .semanticscholar import SemanticScholarFetcher
+from .stackoverflow import StackOverflowFetcher
+from .trustmrr import TrustMRRFetcher
+from .v2ex import V2EXFetcher
+from .vscode import VSCodeMarketplaceFetcher
+from .weworkremotely import WeWorkRemotelyFetcher
+from .wordpress import WordPressFetcher
 
 __all__ = [
     "BaseFetcher",
@@ -60,4 +67,11 @@ __all__ = [
     "HashnodeFetcher",
     "CodePenFetcher",
     "MediumFetcher",
+    "LobstersFetcher",
+    "EchoJSFetcher",
+    "WeWorkRemotelyFetcher",
+    "PapersWithCodeFetcher",
+    "AlternativeToFetcher",
+    "ReplicateFetcher",
+    "BetalistFetcher",
 ]

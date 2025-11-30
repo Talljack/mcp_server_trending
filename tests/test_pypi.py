@@ -52,9 +52,7 @@ async def test_pypi_trending():
     print("Test 2: Filter by category (django)")
     print("-" * 60)
 
-    response = await fetcher.fetch_trending_packages(
-        category="django", limit=5, use_cache=False
-    )
+    response = await fetcher.fetch_trending_packages(category="django", limit=5, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Found {len(response.data)} django-related packages")

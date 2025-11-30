@@ -13,7 +13,9 @@ class PyPIFetcher(BaseFetcher):
     """Fetcher for PyPI package data."""
 
     # Top PyPI packages data (BigQuery)
-    TOP_PACKAGES_URL = "https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json"
+    TOP_PACKAGES_URL = (
+        "https://hugovk.github.io/top-pypi-packages/top-pypi-packages-30-days.min.json"
+    )
     PYPI_API_URL = "https://pypi.org/pypi"
     PACKAGE_URL = "https://pypi.org/project"
 
@@ -66,9 +68,11 @@ class PyPIFetcher(BaseFetcher):
             # Filter by category if specified
             if category:
                 filtered_packages = self._filter_by_category(top_packages_data, category)
-                packages_to_fetch = filtered_packages[:limit * 2]  # Fetch more to account for API failures
+                packages_to_fetch = filtered_packages[
+                    : limit * 2
+                ]  # Fetch more to account for API failures
             else:
-                packages_to_fetch = top_packages_data[:limit * 2]
+                packages_to_fetch = top_packages_data[: limit * 2]
 
             # Fetch detailed info for each package
             packages = await self._fetch_package_details(packages_to_fetch[:limit])
@@ -147,9 +151,7 @@ class PyPIFetcher(BaseFetcher):
 
         return packages
 
-    async def _fetch_single_package(
-        self, pkg_data: dict, rank: int
-    ) -> PyPIPackage | None:
+    async def _fetch_single_package(self, pkg_data: dict, rank: int) -> PyPIPackage | None:
         """Fetch details for a single package."""
         try:
             package_name = pkg_data.get("project")

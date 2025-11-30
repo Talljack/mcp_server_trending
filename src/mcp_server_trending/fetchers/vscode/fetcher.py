@@ -73,7 +73,7 @@ class VSCodeMarketplaceFetcher(BaseFetcher):
                 {
                     "criteria": [
                         {"filterType": 8, "value": "Microsoft.VisualStudio.Code"},
-                        {"filterType": 10, "value": "target:\"Microsoft.VisualStudio.Code\""},
+                        {"filterType": 10, "value": 'target:"Microsoft.VisualStudio.Code"'},
                     ],
                     "pageNumber": 1,
                     "pageSize": limit,
@@ -188,7 +188,9 @@ class VSCodeMarketplaceFetcher(BaseFetcher):
 
                     # Get repository URL from properties
                     repository = None
-                    properties = item.get("versions", [{}])[0].get("properties", []) if versions else []
+                    properties = (
+                        item.get("versions", [{}])[0].get("properties", []) if versions else []
+                    )
                     for prop in properties:
                         if prop.get("key") == "Microsoft.VisualStudio.Services.Links.Source":
                             repository = prop.get("value")

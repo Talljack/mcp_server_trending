@@ -33,4 +33,3 @@ class AwesomeParams:
     order: str = "desc"  # desc, asc
     limit: int = 30  # Number of repos to fetch
     language: str | None = None  # Filter by language
-

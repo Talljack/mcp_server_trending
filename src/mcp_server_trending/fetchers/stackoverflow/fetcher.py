@@ -136,7 +136,4 @@ class StackOverflowFetcher(BaseFetcher):
 
         except Exception as e:
             logger.error(f"Error fetching Stack Overflow tags: {e}")
-            return self._create_response(
-                success=False, data_type="tags", data=[], error=str(e)
-            )
-
+            return self._create_response(success=False, data_type="tags", data=[], error=str(e))

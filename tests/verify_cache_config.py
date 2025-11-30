@@ -34,7 +34,9 @@ def verify_cache_ttl():
     for name, fetcher, expected_ttl, description in fetchers:
         actual_ttl = fetcher.cache_ttl
         status = "✅" if actual_ttl == expected_ttl else "❌"
-        print(f"{status} {name:20s}: {actual_ttl:7d}秒 ({description}) - {'正确' if actual_ttl == expected_ttl else f'期望 {expected_ttl}'}")
+        print(
+            f"{status} {name:20s}: {actual_ttl:7d}秒 ({description}) - {'正确' if actual_ttl == expected_ttl else f'期望 {expected_ttl}'}"
+        )
 
         if actual_ttl != expected_ttl:
             all_correct = False

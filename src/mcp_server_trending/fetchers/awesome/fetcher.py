@@ -165,4 +165,3 @@ class AwesomeFetcher(BaseFetcher):
             return self._create_response(
                 success=False, data_type="awesome_lists", data=[], error=str(e)
             )
-

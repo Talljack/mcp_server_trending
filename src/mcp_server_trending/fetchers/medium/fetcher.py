@@ -69,7 +69,9 @@ class MediumFetcher(BaseFetcher):
 
             logger.info(f"Fetching Medium tag articles (tag={tag}, mode={mode}, limit={limit})")
 
-            response = await self.http_client.get(url, params=params, headers=headers, follow_redirects=True)
+            response = await self.http_client.get(
+                url, params=params, headers=headers, follow_redirects=True
+            )
 
             # Medium prefixes JSON responses with ])}while(1);</x> for security
             text = response.text
@@ -106,7 +108,9 @@ class MediumFetcher(BaseFetcher):
                     "tag": tag,
                     "mode": mode,
                     "limit": limit,
-                    "note": "Medium API may be restricted. Visit https://medium.com/tag/" + tag + " for latest articles",
+                    "note": "Medium API may be restricted. Visit https://medium.com/tag/"
+                    + tag
+                    + " for latest articles",
                 },
             )
 
@@ -153,9 +157,13 @@ class MediumFetcher(BaseFetcher):
                 "Accept": "application/json",
             }
 
-            logger.info(f"Fetching Medium publication articles (publication={publication}, limit={limit})")
+            logger.info(
+                f"Fetching Medium publication articles (publication={publication}, limit={limit})"
+            )
 
-            response = await self.http_client.get(url, params=params, headers=headers, follow_redirects=True)
+            response = await self.http_client.get(
+                url, params=params, headers=headers, follow_redirects=True
+            )
 
             # Remove Medium's JSON prefix
             text = response.text
@@ -190,7 +198,9 @@ class MediumFetcher(BaseFetcher):
                     "total_count": len(articles),
                     "publication": publication,
                     "limit": limit,
-                    "note": "Medium API may be restricted. Visit https://medium.com/" + publication + " for latest articles",
+                    "note": "Medium API may be restricted. Visit https://medium.com/"
+                    + publication
+                    + " for latest articles",
                 },
             )
 
@@ -243,7 +253,9 @@ class MediumFetcher(BaseFetcher):
 
             logger.info(f"Fetching Medium user articles (username={username}, limit={limit})")
 
-            response = await self.http_client.get(url, params=params, headers=headers, follow_redirects=True)
+            response = await self.http_client.get(
+                url, params=params, headers=headers, follow_redirects=True
+            )
 
             # Remove Medium's JSON prefix
             text = response.text
@@ -278,7 +290,9 @@ class MediumFetcher(BaseFetcher):
                     "total_count": len(articles),
                     "username": username,
                     "limit": limit,
-                    "note": "Medium API may be restricted. Visit https://medium.com/" + username + " for latest articles",
+                    "note": "Medium API may be restricted. Visit https://medium.com/"
+                    + username
+                    + " for latest articles",
                 },
             )
 

@@ -28,4 +28,3 @@ class StackOverflowParams:
     order: str = "desc"  # desc, asc
     limit: int = 30  # Number of tags to fetch
     site: str = "stackoverflow"  # Site name
-
