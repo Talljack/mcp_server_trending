@@ -12,6 +12,7 @@ from .codepen import CodePenFetcher
 from .devto import DevToFetcher
 from .echojs import EchoJSFetcher
 from .github import GitHubTrendingFetcher
+from .gumroad import GumroadFetcher
 from .hackernews import HackerNewsFetcher
 from .hashnode import HashnodeFetcher
 from .huggingface import HuggingFaceFetcher
@@ -76,4 +77,5 @@ __all__ = [
     "ReplicateFetcher",
     "BetalistFetcher",
     "TwitterFetcher",
+    "GumroadFetcher",
 ]

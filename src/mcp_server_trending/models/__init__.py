@@ -10,6 +10,7 @@ from .codepen import CodePenPen, CodePenUser
 from .devto import DevToArticle
 from .echojs import EchoJSNews
 from .github import GitHubDeveloper, GitHubRepository, GitHubTrendingParams
+from .gumroad import GumroadCreator, GumroadProduct
 from .hackernews import HackerNewsParams, HackerNewsStory
 from .hashnode import HashnodeArticle, HashnodeAuthor
 from .huggingface import HFDataset, HFModel
@@ -90,4 +91,6 @@ __all__ = [
     "BetalistStartup",
     "Tweet",
     "TwitterUser",
+    "GumroadProduct",
+    "GumroadCreator",
 ]

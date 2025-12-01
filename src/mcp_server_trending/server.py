@@ -22,6 +22,7 @@ from .fetchers import (
     DevToFetcher,
     EchoJSFetcher,
     GitHubTrendingFetcher,
+    GumroadFetcher,
     HackerNewsFetcher,
     HashnodeFetcher,
     HuggingFaceFetcher,
@@ -106,6 +107,9 @@ class TrendingMCPServer:
 
         # Twitter/X fetcher (via Nitter)
         self.twitter_fetcher = TwitterFetcher(cache=self.cache)
+
+        # Gumroad fetcher
+        self.gumroad_fetcher = GumroadFetcher(cache=self.cache)
 
         # Research paper fetchers with longer cache TTL (papers update slowly)
         # All paper platforms: 24 hours cache - papers and citations update slowly
@@ -1767,6 +1771,148 @@ class TrendingMCPServer:
                         "required": ["username"],
                     },
                 ),
+                # Gumroad Tools
+                Tool(
+                    name="get_gumroad_discover",
+                    description="Get trending/featured products from Gumroad discover page. Use this to find popular digital products being sold by creators.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "programming",
+                                    "design",
+                                    "software",
+                                    "business",
+                                    "education",
+                                    "writing",
+                                    "music",
+                                    "films",
+                                    "games",
+                                    "3d",
+                                    "audio",
+                                    "photography",
+                                    "fitness-and-health",
+                                    "self-improvement",
+                                ],
+                                "description": "Product category to filter. Leave empty for all categories.",
+                            },
+                            "sort": {
+                                "type": "string",
+                                "enum": ["featured", "newest", "popular"],
+                                "default": "featured",
+                                "description": "Sort order: 'featured' for curated picks, 'newest' for latest, 'popular' for most popular.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_programming",
+                    description="Get programming-related products from Gumroad (code, tutorials, courses, ebooks). Perfect for developers looking for resources.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_design",
+                    description="Get design-related products from Gumroad (templates, assets, UI kits, courses). Great for designers and product makers.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="search_gumroad",
+                    description="Search for products on Gumroad by keyword. Find specific types of digital products.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query. Examples: 'notion templates', 'figma ui kit', 'python course', 'startup guide'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_creator",
+                    description="Get products from a specific Gumroad creator. See what a creator is selling.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Creator's Gumroad username.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -2337,6 +2483,46 @@ class TrendingMCPServer:
                 elif name == "get_twitter_user_profile":
                     response = await self.twitter_fetcher.fetch_user_profile(
                         username=arguments.get("username", ""),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Gumroad Tools
+                elif name == "get_gumroad_discover":
+                    response = await self.gumroad_fetcher.fetch_discover_products(
+                        category=arguments.get("category"),
+                        sort=arguments.get("sort", "featured"),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_programming":
+                    response = await self.gumroad_fetcher.fetch_programming_products(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_design":
+                    response = await self.gumroad_fetcher.fetch_design_products(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "search_gumroad":
+                    response = await self.gumroad_fetcher.search_products(
+                        query=arguments.get("query", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_creator":
+                    response = await self.gumroad_fetcher.fetch_creator_products(
+                        creator_username=arguments.get("username", ""),
+                        limit=arguments.get("limit", 20),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
