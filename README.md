@@ -59,26 +59,9 @@ MCP Server Trending 是一个基于 [Model Context Protocol (MCP)](https://model
 
 ## ⚡ 快速开始
 
-### 方式一：使用 Smithery 安装（推荐 - 最简单）
+> **📌 重要说明**：本项目是 **stdio 模式** 的 MCP 服务器，需要在本地安装使用。不是云服务，而是本地工具。
 
-[Smithery](https://smithery.ai/) 是一个 MCP 服务器管理平台，可以一键安装并配置到任何支持的客户端。
-
-```bash
-npx -y @smithery/cli install mcp-server-trending --client <CLIENT_NAME>
-```
-
-**支持的客户端**：`claude-desktop`、`cursor`、`cline`、`windsurf`、`zed` 等
-
-**Smithery 会自动帮你完成**：
-- ✅ 安装 `mcp-server-trending` 包（使用 pipx）
-- ✅ 写入客户端配置文件
-- ✅ 使用绝对路径配置（自动解决 PATH 问题）
-
-**安装后无需任何额外操作**，重启客户端即可使用！
-
-> **💡 提示**：Smithery 会自动在配置中使用绝对路径，所以不需要手动创建符号链接。这是最省心的安装方式。
-
-### 方式二：从 PyPI 安装
+### 方式一：从 PyPI 安装（推荐 ⭐）
 
 > ⚠️ **重要提示**：
 > - **Windows**：安装后可直接使用 `"command": "mcp-server-trending"`
@@ -181,7 +164,7 @@ pip install mcp-server-trending
 >
 > **如果不想创建符号链接**，也可以在配置中使用绝对路径（详见下方"配置 AI 客户端"部分）。
 
-### 方式三：从源码安装
+### 方式二：从源码安装
 
 ```bash
 git clone https://github.com/Talljack/mcp_server_trending.git
@@ -199,14 +182,32 @@ bash install.sh
 
 | 安装方式 | 难度 | 优点 | 缺点 | 推荐场景 |
 |---------|------|------|------|---------|
-| **方式一：Smithery** | ⭐ 最简单 | • 一条命令完成<br>• 自动配置<br>• 自动处理 PATH | • 需要 Node.js | 🎯 **所有用户推荐** |
-| **方式二：PyPI (pipx)** | ⭐⭐ 简单 | • 标准 Python 安装<br>• 灵活配置 | • macOS/Linux 需额外配置<br>• 需手动写配置文件 | Python 开发者 |
-| **方式三：源码** | ⭐⭐⭐ 中等 | • 可修改源码<br>• 开发调试 | • 需要 git<br>• 配置较复杂 | 贡献者、开发者 |
+| **方式一：PyPI (pipx)** | ⭐⭐ 简单 | • 标准 Python 安装<br>• 版本管理方便<br>• 稳定可靠 | • macOS/Linux 需额外配置<br>• 需手动写配置文件 | 🎯 **所有用户推荐** |
+| **方式二：源码** | ⭐⭐⭐ 中等 | • 可修改源码<br>• 最新功能<br>• 开发调试 | • 需要 git<br>• 配置较复杂 | 贡献者、开发者 |
 
 **快速选择指南**：
-- 🚀 **只想快速使用**？→ 方式一（Smithery）
-- 🐍 **是 Python 开发者**？→ 方式二（pipx）
-- 💻 **想贡献代码**？→ 方式三（源码）
+- 🚀 **只想快速使用**？→ 方式一（PyPI + pipx）
+- 💻 **想贡献代码或使用最新功能**？→ 方式二（源码）
+
+---
+
+## ❓ 关于 Smithery 安装
+
+**为什么不支持 Smithery 一键安装？**
+
+本项目是 **stdio 模式** 的 MCP 服务器，而 Smithery 的托管部署主要支持 **HTTP/SSE 模式**。
+
+- **stdio 模式**：本地安装，通过标准输入/输出通信（适合桌面客户端）
+- **HTTP/SSE 模式**：云端托管，通过 HTTP 通信（适合 Web 应用）
+
+**我们的选择**：
+- ✅ 保持 stdio 模式 = 零成本 + 零运维 + 更安全
+- ❌ 切换到 HTTP 模式 = 需要云服务器 + 运维成本 + 复杂度增加
+
+**如何安装**：
+请使用上面的 **方式一（PyPI）** 或 **方式二（源码）** 安装，只需几分钟即可完成！
+
+> 💡 **提示**：虽然不支持 Smithery 托管，但我们提供了详细的安装文档和配置示例，安装过程同样简单！
 
 ---
 
