@@ -1,31 +1,38 @@
 """Models package."""
 
+from .aitools import AITool
+from .alternativeto import AlternativeToApp
+from .arxiv import ArxivPaper, ArxivQuery
+from .awesome import AwesomeList, AwesomeParams
 from .base import BaseModel, TrendingResponse
+from .betalist import BetalistStartup
+from .codepen import CodePenPen, CodePenUser
+from .devto import DevToArticle
+from .echojs import EchoJSNews
 from .github import GitHubDeveloper, GitHubRepository, GitHubTrendingParams
 from .hackernews import HackerNewsParams, HackerNewsStory
-from .producthunt import ProductHuntMaker, ProductHuntParams, ProductHuntProduct
-from .indiehackers import IndieHackersPost, IncomeReport, ProjectMilestone
-from .reddit import RedditPost, SubredditInfo
-from .openrouter import LLMModel, ModelComparison, ModelRanking
-from .trustmrr import TrustMRRProject
-from .aitools import AITool
-from .huggingface import HFModel, HFDataset
-from .v2ex import V2EXTopic
+from .hashnode import HashnodeArticle, HashnodeAuthor
+from .huggingface import HFDataset, HFModel
+from .indiehackers import IncomeReport, IndieHackersPost, ProjectMilestone
 from .juejin import JuejinArticle
-from .devto import DevToArticle
-from .modelscope import ModelScopeModel, ModelScopeDataset
-from .stackoverflow import StackOverflowTag, StackOverflowParams
-from .awesome import AwesomeList, AwesomeParams
-from .arxiv import ArxivPaper, ArxivQuery
+from .lobsters import LobstersStory
+from .medium import MediumArticle, MediumAuthor
+from .modelscope import ModelScopeDataset, ModelScopeModel
+from .openreview import OpenReviewPaper, OpenReviewQuery
+from .openrouter import LLMModel, ModelComparison, ModelRanking
+from .paperswithcode import PapersWithCodeMethod, PapersWithCodePaper
+from .producthunt import ProductHuntMaker, ProductHuntParams, ProductHuntProduct
+from .reddit import RedditPost, SubredditInfo
+from .replicate import ReplicateModel
 from .semanticscholar import (
     SemanticScholarAuthor,
     SemanticScholarPaper,
     SemanticScholarQuery,
 )
-from .openreview import OpenReviewPaper, OpenReviewQuery
-from .hashnode import HashnodeArticle, HashnodeAuthor
-from .codepen import CodePenPen, CodePenUser
-from .medium import MediumArticle, MediumAuthor
+from .stackoverflow import StackOverflowParams, StackOverflowTag
+from .trustmrr import TrustMRRProject
+from .v2ex import V2EXTopic
+from .weworkremotely import WeWorkRemotelyJob
 
 __all__ = [
     "BaseModel",
@@ -72,4 +79,12 @@ __all__ = [
     "CodePenUser",
     "MediumArticle",
     "MediumAuthor",
+    "LobstersStory",
+    "EchoJSNews",
+    "WeWorkRemotelyJob",
+    "PapersWithCodePaper",
+    "PapersWithCodeMethod",
+    "AlternativeToApp",
+    "ReplicateModel",
+    "BetalistStartup",
 ]

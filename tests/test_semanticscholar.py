@@ -25,10 +25,7 @@ async def test_semanticscholar_papers():
     print("-" * 60)
 
     response = await fetcher.search_papers(
-        query="deep learning",
-        sort="citationCount:desc",
-        limit=10,
-        use_cache=False
+        query="deep learning", sort="citationCount:desc", limit=10, use_cache=False
     )
 
     if response.success:
@@ -61,10 +58,7 @@ async def test_semanticscholar_papers():
     print("-" * 60)
 
     response = await fetcher.search_papers(
-        query="transformers",
-        fields_of_study=["Computer Science"],
-        limit=5,
-        use_cache=False
+        query="transformers", fields_of_study=["Computer Science"], limit=5, use_cache=False
     )
 
     if response.success:
@@ -85,11 +79,7 @@ async def test_semanticscholar_papers():
     print("-" * 60)
 
     response = await fetcher.search_papers(
-        query="neural networks",
-        year="2023-2024",
-        open_access_pdf=True,
-        limit=5,
-        use_cache=False
+        query="neural networks", year="2023-2024", open_access_pdf=True, limit=5, use_cache=False
     )
 
     if response.success:
@@ -112,10 +102,7 @@ async def test_semanticscholar_papers():
 
     for sort in ["citationCount:desc", "publicationDate:desc"]:
         response = await fetcher.search_papers(
-            query="machine learning",
-            sort=sort,
-            limit=3,
-            use_cache=False
+            query="machine learning", sort=sort, limit=3, use_cache=False
         )
 
         sort_names = {

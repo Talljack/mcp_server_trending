@@ -137,43 +137,42 @@ class ProductHuntFetcher(BaseFetcher):
             time_delta = self._parse_time_range(time_range)
             cutoff = datetime.now(timezone.utc) - time_delta
 
-            logger.info(f"Fetching Product Hunt products from RSS (time_range={time_range}, cutoff={cutoff.strftime('%Y-%m-%d %H:%M')})")
+            logger.info(
+                f"Fetching Product Hunt products from RSS (time_range={time_range}, cutoff={cutoff.strftime('%Y-%m-%d %H:%M')})"
+            )
 
             response = await self.http_client.get(
-                self.RSS_URL,
-                headers={"User-Agent": "Mozilla/5.0"}
+                self.RSS_URL, headers={"User-Agent": "Mozilla/5.0"}
             )
 
             root = ET.fromstring(response.text)
-            ns = {'atom': 'http://www.w3.org/2005/Atom'}
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
 
-            entries = root.findall('atom:entry', ns)
+            entries = root.findall("atom:entry", ns)
             products = []
 
             for entry in entries:
                 try:
                     # Parse published date first
-                    published_elem = entry.find('atom:published', ns)
+                    published_elem = entry.find("atom:published", ns)
                     if published_elem is None or not published_elem.text:
                         continue
 
                     published_text = published_elem.text
-                    published_date = datetime.fromisoformat(
-                        published_text.replace('Z', '+00:00')
-                    )
+                    published_date = datetime.fromisoformat(published_text.replace("Z", "+00:00"))
 
                     # Filter by time range
                     if published_date < cutoff:
                         continue
 
                     # Extract product info
-                    title_elem = entry.find('atom:title', ns)
+                    title_elem = entry.find("atom:title", ns)
                     link_elem = entry.find('atom:link[@rel="alternate"]', ns)
-                    content_elem = entry.find('atom:content', ns)
-                    author_elem = entry.find('atom:author/atom:name', ns)
+                    content_elem = entry.find("atom:content", ns)
+                    author_elem = entry.find("atom:author/atom:name", ns)
 
                     title = title_elem.text.strip() if title_elem is not None else "Unknown"
-                    url = link_elem.get('href') if link_elem is not None else ""
+                    url = link_elem.get("href") if link_elem is not None else ""
 
                     # Extract tagline from content
                     tagline = ""
@@ -181,7 +180,7 @@ class ProductHuntFetcher(BaseFetcher):
                         # Parse HTML content to extract tagline
                         content_html = content_elem.text
                         # Extract text between <p> tags
-                        match = re.search(r'<p>\s*([^<]+)\s*</p>', content_html)
+                        match = re.search(r"<p>\s*([^<]+)\s*</p>", content_html)
                         if match:
                             tagline = match.group(1).strip()
 
@@ -212,7 +211,9 @@ class ProductHuntFetcher(BaseFetcher):
                     logger.warning(f"Error parsing RSS entry: {e}")
                     continue
 
-            logger.info(f"Successfully fetched {len(products)} products from RSS feed (time_range={time_range})")
+            logger.info(
+                f"Successfully fetched {len(products)} products from RSS feed (time_range={time_range})"
+            )
 
             return self._create_response(
                 success=True,

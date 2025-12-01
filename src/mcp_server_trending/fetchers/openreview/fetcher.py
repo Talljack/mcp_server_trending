@@ -118,7 +118,9 @@ class OpenReviewFetcher(BaseFetcher):
 
             # Filter by decision if specified
             if decision:
-                papers = [p for p in papers if p.decision and decision.lower() in p.decision.lower()]
+                papers = [
+                    p for p in papers if p.decision and decision.lower() in p.decision.lower()
+                ]
 
             # Limit results
             papers = papers[:limit]
@@ -256,6 +258,7 @@ class OpenReviewFetcher(BaseFetcher):
                 if cdate:
                     # Convert timestamp to ISO format
                     from datetime import datetime
+
                     submission_date = datetime.fromtimestamp(cdate / 1000).isoformat()
 
                 paper = OpenReviewPaper(

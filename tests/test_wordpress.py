@@ -77,9 +77,7 @@ async def test_wordpress_plugins():
     print("-" * 60)
 
     for browse_type in ["popular", "featured", "new", "updated"]:
-        response = await fetcher.fetch_plugins(
-            browse=browse_type, limit=3, use_cache=False
-        )
+        response = await fetcher.fetch_plugins(browse=browse_type, limit=3, use_cache=False)
 
         if response.success:
             print(f"   ✓ {browse_type.capitalize()}: {len(response.data)} plugins")

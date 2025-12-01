@@ -50,9 +50,7 @@ async def test_arxiv_papers():
     print("Test 2: Search AI papers (cs.AI)")
     print("-" * 60)
 
-    response = await fetcher.fetch_papers(
-        category="cs.AI", limit=5, use_cache=False
-    )
+    response = await fetcher.fetch_papers(category="cs.AI", limit=5, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Found {len(response.data)} AI papers")
@@ -70,9 +68,7 @@ async def test_arxiv_papers():
     print("Test 3: Search for 'transformers' papers")
     print("-" * 60)
 
-    response = await fetcher.fetch_papers(
-        search_query="transformers", limit=5, use_cache=False
-    )
+    response = await fetcher.fetch_papers(search_query="transformers", limit=5, use_cache=False)
 
     if response.success:
         print(f"   ✓ Success: Found {len(response.data)} papers about transformers")
@@ -92,9 +88,7 @@ async def test_arxiv_papers():
     print("-" * 60)
 
     for category in ["cs.LG", "cs.CV", "cs.CL"]:
-        response = await fetcher.fetch_papers(
-            category=category, limit=3, use_cache=False
-        )
+        response = await fetcher.fetch_papers(category=category, limit=3, use_cache=False)
 
         category_names = {
             "cs.LG": "Machine Learning",

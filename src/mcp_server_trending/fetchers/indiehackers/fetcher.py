@@ -118,7 +118,9 @@ class IndieHackersFetcher(BaseFetcher):
                 group_name = post_data.get("groupName")
 
                 # Create post URL
-                post_url = f"{self.base_url}/post/{post_id}" if post_id else f"{self.base_url}/posts"
+                post_url = (
+                    f"{self.base_url}/post/{post_id}" if post_id else f"{self.base_url}/posts"
+                )
                 author_url = f"{self.base_url}/user/{username}" if username else f"{self.base_url}"
 
                 post = IndieHackersPost(

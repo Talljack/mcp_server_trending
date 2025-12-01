@@ -41,9 +41,7 @@ async def test_hashnode_with_tag():
     """Test Hashnode articles with tag filter."""
     fetcher = HashnodeFetcher()
 
-    response = await fetcher.fetch_trending_articles(
-        limit=3, tag="javascript", use_cache=False
-    )
+    response = await fetcher.fetch_trending_articles(limit=3, tag="javascript", use_cache=False)
 
     assert response.success, "Fetch with tag should succeed"
     assert len(response.data) <= 3, "Should respect limit"
@@ -105,9 +103,7 @@ async def test_hashnode_sort_options():
     sort_options = ["popular", "recent", "featured"]
 
     for sort_by in sort_options:
-        response = await fetcher.fetch_trending_articles(
-            limit=2, sort_by=sort_by, use_cache=False
-        )
+        response = await fetcher.fetch_trending_articles(limit=2, sort_by=sort_by, use_cache=False)
 
         assert response.success, f"Fetch with sort_by={sort_by} should succeed"
         assert response.metadata.get("sort_by") == sort_by, f"Should use {sort_by} sort"

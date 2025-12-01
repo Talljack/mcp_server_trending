@@ -131,7 +131,8 @@ class HashnodeFetcher(BaseFetcher):
             # Apply tag filtering if specified
             if tag:
                 articles = [
-                    article for article in articles
+                    article
+                    for article in articles
                     if any(tag.lower() in t.lower() for t in article.tags)
                 ]
 
@@ -245,7 +246,9 @@ class HashnodeFetcher(BaseFetcher):
 
             variables = {"host": publication_host, "first": limit}
 
-            logger.info(f"Fetching Hashnode publication articles ({publication_host}, limit={limit})")
+            logger.info(
+                f"Fetching Hashnode publication articles ({publication_host}, limit={limit})"
+            )
 
             response = await self.http_client.post(
                 self.base_url,
@@ -342,7 +345,9 @@ class HashnodeFetcher(BaseFetcher):
                 updated_at = None
                 if node.get("updatedAt"):
                     try:
-                        updated_at = datetime.fromisoformat(node["updatedAt"].replace("Z", "+00:00"))
+                        updated_at = datetime.fromisoformat(
+                            node["updatedAt"].replace("Z", "+00:00")
+                        )
                     except (ValueError, AttributeError):
                         pass
 

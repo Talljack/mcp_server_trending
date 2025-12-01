@@ -59,7 +59,9 @@ class Config:
             ),
             openrouter_api_key=os.getenv("OPENROUTER_API_KEY", instance.openrouter_api_key),
             huggingface_token=os.getenv("HUGGINGFACE_TOKEN", instance.huggingface_token),
-            semanticscholar_api_key=os.getenv("SEMANTICSCHOLAR_API_KEY", instance.semanticscholar_api_key),
+            semanticscholar_api_key=os.getenv(
+                "SEMANTICSCHOLAR_API_KEY", instance.semanticscholar_api_key
+            ),
             max_requests_per_minute=int(
                 os.getenv("MAX_REQUESTS_PER_MINUTE", str(instance.max_requests_per_minute))
             ),
