@@ -5,12 +5,14 @@ author: MCP Server Trending Team
 repository: https://github.com/Talljack/mcp_server_trending
 homepage: https://github.com/Talljack/mcp_server_trending
 license: MIT
-type: python
+runtime: python
 
 install:
   pipx: mcp-server-trending
 
-command: mcp-server-trending
+startCommand:
+  command: mcp-server-trending
+  args: []
 
 platforms:
   - linux
