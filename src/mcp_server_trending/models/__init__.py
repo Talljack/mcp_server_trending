@@ -31,6 +31,7 @@ from .semanticscholar import (
 )
 from .stackoverflow import StackOverflowParams, StackOverflowTag
 from .trustmrr import TrustMRRProject
+from .twitter import Tweet, TwitterUser
 from .v2ex import V2EXTopic
 from .weworkremotely import WeWorkRemotelyJob
 
@@ -87,4 +88,6 @@ __all__ = [
     "AlternativeToApp",
     "ReplicateModel",
     "BetalistStartup",
+    "Tweet",
+    "TwitterUser",
 ]

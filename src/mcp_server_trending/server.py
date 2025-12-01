@@ -42,6 +42,7 @@ from .fetchers import (
     SemanticScholarFetcher,
     StackOverflowFetcher,
     TrustMRRFetcher,
+    TwitterFetcher,
     V2EXFetcher,
     VSCodeMarketplaceFetcher,
     WeWorkRemotelyFetcher,
@@ -102,6 +103,9 @@ class TrendingMCPServer:
         self.alternativeto_fetcher = AlternativeToFetcher(cache=self.cache)
         self.replicate_fetcher = ReplicateFetcher(cache=self.cache)
         self.betalist_fetcher = BetalistFetcher(cache=self.cache)
+
+        # Twitter/X fetcher (via Nitter)
+        self.twitter_fetcher = TwitterFetcher(cache=self.cache)
 
         # Research paper fetchers with longer cache TTL (papers update slowly)
         # All paper platforms: 24 hours cache - papers and citations update slowly
@@ -1649,6 +1653,120 @@ class TrendingMCPServer:
                         "required": ["topic"],
                     },
                 ),
+                # Twitter/X Tools (via Nitter)
+                Tool(
+                    name="get_twitter_hashtag_tweets",
+                    description="Get tweets by hashtag from Twitter/X. Use this to find tweets about specific topics like #buildinpublic, #indiehackers, #saas, #startup, #webdev, #ai, etc.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "hashtag": {
+                                "type": "string",
+                                "description": "Hashtag to search (without #). Examples: 'buildinpublic', 'indiehackers', 'saas', 'startup', 'webdev', 'javascript', 'python', 'ai', 'opensource'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["hashtag"],
+                    },
+                ),
+                Tool(
+                    name="get_twitter_user_tweets",
+                    description="Get tweets from a specific Twitter/X user. Use this to see what a specific person is tweeting about.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Twitter username (without @). Examples: 'levelsio', 'elonmusk', 'naval'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
+                Tool(
+                    name="get_twitter_tech_tweets",
+                    description="Get trending tech tweets aggregated from popular hashtags (#buildinpublic, #indiehackers, #saas, #startup, #webdev). Use this for a quick overview of what's trending in tech Twitter.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Total number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_twitter_indie_hackers",
+                    description="Get tweets from popular indie hackers and tech influencers (levelsio, marc_louvion, dannypostmaa, taborsky_, etc.). Use this to see what successful indie hackers are sharing.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_twitter_user_profile",
+                    description="Get a Twitter/X user's profile information including bio, follower count, and stats.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Twitter username (without @).",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -2181,6 +2299,44 @@ class TrendingMCPServer:
                     response = await self.betalist_fetcher.fetch_by_topic(
                         topic=arguments.get("topic", ""),
                         limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Twitter/X Tools
+                elif name == "get_twitter_hashtag_tweets":
+                    response = await self.twitter_fetcher.fetch_hashtag_tweets(
+                        hashtag=arguments.get("hashtag", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_user_tweets":
+                    response = await self.twitter_fetcher.fetch_user_tweets(
+                        username=arguments.get("username", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_tech_tweets":
+                    response = await self.twitter_fetcher.fetch_tech_tweets(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_indie_hackers":
+                    response = await self.twitter_fetcher.fetch_indie_hackers_tweets(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_user_profile":
+                    response = await self.twitter_fetcher.fetch_user_profile(
+                        username=arguments.get("username", ""),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
