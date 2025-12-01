@@ -42,7 +42,18 @@ class TrendingResponse(BaseModel):
         result = super().to_dict()
         # Ensure data items are properly serialized
         if self.data:
-            result["data"] = [
-                item.to_dict() if isinstance(item, BaseModel) else item for item in self.data
-            ]
+            serialized_data = []
+            for item in self.data:
+                if isinstance(item, BaseModel):
+                    # Project's dataclass BaseModel
+                    serialized_data.append(item.to_dict())
+                elif hasattr(item, "model_dump"):
+                    # Pydantic BaseModel
+                    serialized_data.append(item.model_dump())
+                elif hasattr(item, "to_dict"):
+                    # Any other object with to_dict method
+                    serialized_data.append(item.to_dict())
+                else:
+                    serialized_data.append(item)
+            result["data"] = serialized_data
         return result

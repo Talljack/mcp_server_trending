@@ -2,9 +2,11 @@
 
 from dataclasses import dataclass
 
+from .base import BaseModel
+
 
 @dataclass
-class ReplicateModel:
+class ReplicateModel(BaseModel):
     """Replicate AI model data model."""
 
     rank: int

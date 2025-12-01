@@ -157,11 +157,11 @@ class EchoJSFetcher(BaseFetcher):
                     title=item.get("title", ""),
                     url=item.get("url", ""),
                     created_at=created_at,
-                    up=item.get("up", 0),
-                    down=item.get("down", 0),
-                    comments=item.get("comments", 0),
+                    up=int(item.get("up", 0) or 0),
+                    down=int(item.get("down", 0) or 0),
+                    comments=int(item.get("comments", 0) or 0),
                     username=item.get("username", ""),
-                    ctime=ctime,
+                    ctime=int(ctime) if ctime else 0,
                 )
                 news_items.append(news)
 
