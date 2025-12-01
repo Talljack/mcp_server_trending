@@ -99,17 +99,46 @@ which mcp-server-trending  # 应该显示：/usr/local/bin/mcp-server-trending
 <details>
 <summary><b>🐧 Linux 安装步骤</b></summary>
 
+> ⚠️ **Python 版本要求**：本项目需要 **Python 3.10+**。如果你的系统默认是 Python 3.8/3.9，请先安装更高版本的 Python。
+
+**检查 Python 版本**：
 ```bash
-# 1. 安装 pipx
+python3 --version
+# 如果显示 Python 3.8.x 或 3.9.x，需要先安装 Python 3.10+
+```
+
+**安装 Python 3.10+（如果需要）**：
+```bash
+# Ubuntu 20.04/22.04:
+sudo apt update
+sudo apt install python3.10 python3.10-venv python3.10-dev
+
+# 或使用 deadsnakes PPA（推荐，可获取最新版本）:
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3.11-dev
+
+# CentOS/RHEL/Rocky Linux:
+sudo dnf install python3.11 python3.11-pip
+
+# Arch Linux:
+sudo pacman -S python  # Arch 通常已有最新版本
+```
+
+**安装步骤**：
+```bash
+# 1. 安装 pipx（使用 Python 3.10+）
 # Ubuntu/Debian:
 sudo apt install pipx
-# 或使用 pip:
-python3 -m pip install --user pipx
+# 或使用指定版本的 pip:
+python3.11 -m pip install --user pipx
 
 # 2. 配置 PATH
 pipx ensurepath
 
-# 3. 安装 mcp-server-trending
+# 3. 安装 mcp-server-trending（指定 Python 版本）
+pipx install mcp-server-trending --python python3.11
+# 或者如果系统默认 python3 已是 3.10+:
 pipx install mcp-server-trending
 
 # 4. 创建系统符号链接（重要！让 GUI 应用能找到命令）
@@ -117,6 +146,7 @@ sudo ln -sf ~/.local/pipx/venvs/mcp-server-trending/bin/mcp-server-trending /usr
 
 # 5. 验证
 which mcp-server-trending  # 应该显示：/usr/local/bin/mcp-server-trending
+mcp-server-trending --version
 ```
 
 完成后，配置文件中可以直接使用：
@@ -993,6 +1023,60 @@ WordPress 有哪些热门的 SEO 插件？
 ---
 
 ## 🐛 疑难解答
+
+<details>
+<summary><b>❌ Linux 上安装失败：Python 版本不兼容</b></summary>
+
+**问题**：安装时报错 `requires-python>=3.10` 或运行时出现语法错误
+
+**原因**：本项目需要 **Python 3.10+**，但很多 Linux 发行版默认的 Python 版本较低：
+- Ubuntu 20.04 默认 Python 3.8
+- Ubuntu 22.04 默认 Python 3.10 ✅
+- CentOS 7/8 默认 Python 3.6/3.8
+- Debian 11 默认 Python 3.9
+
+**解决方案**：
+
+**方案 1：安装更高版本的 Python**
+```bash
+# Ubuntu 20.04（使用 deadsnakes PPA）
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+sudo apt install python3.11 python3.11-venv python3.11-dev
+
+# CentOS/RHEL/Rocky Linux
+sudo dnf install python3.11 python3.11-pip
+
+# 然后使用指定版本安装
+pipx install mcp-server-trending --python python3.11
+```
+
+**方案 2：使用 pyenv 管理多版本 Python**
+```bash
+# 安装 pyenv
+curl https://pyenv.run | bash
+
+# 添加到 shell 配置
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+source ~/.bashrc
+
+# 安装 Python 3.11
+pyenv install 3.11.0
+pyenv global 3.11.0
+
+# 然后正常安装
+pipx install mcp-server-trending
+```
+
+**方案 3：使用 Docker**
+```bash
+docker run -it python:3.11-slim bash
+pip install mcp-server-trending
+```
+
+</details>
 
 <details>
 <summary><b>❌ Cursor 报错：spawn mcp-server-trending ENOENT</b></summary>
