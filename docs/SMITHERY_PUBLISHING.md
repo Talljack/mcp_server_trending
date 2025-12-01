@@ -230,12 +230,12 @@ Smithery 通过以下方式识别包类型：
 3. **准备联系邮件**（如果需要）：
    ```
    主题：Request to Add mcp-server-trending to Smithery Registry
-   
+
    内容：
    Hi Smithery Team,
-   
+
    I would like to submit my MCP server to the Smithery registry:
-   
+
    - Name: mcp-server-trending
    - Type: Python (PyPI)
    - PyPI: https://pypi.org/project/mcp-server-trending/
@@ -243,10 +243,10 @@ Smithery 通过以下方式识别包类型：
    - Description: 🎯 一站式独立开发者热门榜单聚合服务
    - Version: 0.1.3
    - Install: pipx install mcp-server-trending
-   
+
    The package is already published on PyPI and fully functional.
    Could you please guide me on how to add it to the Smithery registry?
-   
+
    Thank you!
    ```
 

@@ -11,7 +11,11 @@
     "pipx": "mcp-server-trending"
   },
   "command": "mcp-server-trending",
-  "platforms": ["linux", "macos", "windows"],
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
   "categories": [
     "data",
     "trending",
