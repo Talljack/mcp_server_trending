@@ -1,2 +1,11 @@
 runtime: python
 
+# Note: This is a stdio-mode MCP server designed for local installation.
+# Smithery hosting is not supported, but this listing serves as a discovery platform.
+# 
+# Installation instructions:
+# 1. Install via PyPI: pipx install mcp-server-trending
+# 2. Or from source: git clone https://github.com/Talljack/mcp_server_trending
+# 
+# Full documentation: https://github.com/Talljack/mcp_server_trending#readme
+

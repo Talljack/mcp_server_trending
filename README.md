@@ -191,23 +191,37 @@ bash install.sh
 
 ---
 
-## ❓ 关于 Smithery 安装
+## ❓ 关于 Smithery
 
-**为什么不支持 Smithery 一键安装？**
+**📍 在 Smithery 上找到我们**：[smithery.ai/server/@Talljack/mcp_server_trending](https://smithery.ai/server/@Talljack/mcp_server_trending)
+
+**为什么 Smithery 页面显示 "No capabilities" 和 "No deployments"？**
 
 本项目是 **stdio 模式** 的 MCP 服务器，而 Smithery 的托管部署主要支持 **HTTP/SSE 模式**。
 
-- **stdio 模式**：本地安装，通过标准输入/输出通信（适合桌面客户端）
+- **stdio 模式**：本地安装，通过标准输入/输出通信（适合桌面客户端）✅
 - **HTTP/SSE 模式**：云端托管，通过 HTTP 通信（适合 Web 应用）
 
 **我们的选择**：
-- ✅ 保持 stdio 模式 = 零成本 + 零运维 + 更安全
+- ✅ 保持 stdio 模式 = 零成本 + 零运维 + 更安全 + 更快响应
 - ❌ 切换到 HTTP 模式 = 需要云服务器 + 运维成本 + 复杂度增加
+
+**Smithery 的作用**：
+- 🔍 **发现平台** - 让用户找到我们的项目
+- 📚 **文档入口** - 引导到 GitHub 查看完整文档
+- ⚠️ **不是托管平台** - 需要本地安装使用
 
 **如何安装**：
 请使用上面的 **方式一（PyPI）** 或 **方式二（源码）** 安装，只需几分钟即可完成！
 
 > 💡 **提示**：虽然不支持 Smithery 托管，但我们提供了详细的安装文档和配置示例，安装过程同样简单！
+
+**功能列表**：
+- ✅ 45+ MCP 工具
+- ✅ 支持 25+ 平台（GitHub、Hacker News、Product Hunt、Papers with Code 等）
+- ✅ 跨平台聚合分析
+- ✅ 智能缓存机制
+- ✅ 完全免费开源
 
 ---
 
