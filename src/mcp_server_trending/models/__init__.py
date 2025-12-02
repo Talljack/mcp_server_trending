@@ -10,6 +10,7 @@ from .codepen import CodePenPen, CodePenUser
 from .devto import DevToArticle
 from .echojs import EchoJSNews
 from .github import GitHubDeveloper, GitHubRepository, GitHubTrendingParams
+from .gumroad import GumroadCreator, GumroadProduct
 from .hackernews import HackerNewsParams, HackerNewsStory
 from .hashnode import HashnodeArticle, HashnodeAuthor
 from .huggingface import HFDataset, HFModel
@@ -31,6 +32,7 @@ from .semanticscholar import (
 )
 from .stackoverflow import StackOverflowParams, StackOverflowTag
 from .trustmrr import TrustMRRProject
+from .twitter import Tweet, TwitterUser
 from .v2ex import V2EXTopic
 from .weworkremotely import WeWorkRemotelyJob
 
@@ -87,4 +89,8 @@ __all__ = [
     "AlternativeToApp",
     "ReplicateModel",
     "BetalistStartup",
+    "Tweet",
+    "TwitterUser",
+    "GumroadProduct",
+    "GumroadCreator",
 ]

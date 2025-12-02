@@ -12,6 +12,7 @@ from .codepen import CodePenFetcher
 from .devto import DevToFetcher
 from .echojs import EchoJSFetcher
 from .github import GitHubTrendingFetcher
+from .gumroad import GumroadFetcher
 from .hackernews import HackerNewsFetcher
 from .hashnode import HashnodeFetcher
 from .huggingface import HuggingFaceFetcher
@@ -32,6 +33,7 @@ from .replicate import ReplicateFetcher
 from .semanticscholar import SemanticScholarFetcher
 from .stackoverflow import StackOverflowFetcher
 from .trustmrr import TrustMRRFetcher
+from .twitter import TwitterFetcher
 from .v2ex import V2EXFetcher
 from .vscode import VSCodeMarketplaceFetcher
 from .weworkremotely import WeWorkRemotelyFetcher
@@ -74,4 +76,6 @@ __all__ = [
     "AlternativeToFetcher",
     "ReplicateFetcher",
     "BetalistFetcher",
+    "TwitterFetcher",
+    "GumroadFetcher",
 ]

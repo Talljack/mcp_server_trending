@@ -22,6 +22,7 @@ from .fetchers import (
     DevToFetcher,
     EchoJSFetcher,
     GitHubTrendingFetcher,
+    GumroadFetcher,
     HackerNewsFetcher,
     HashnodeFetcher,
     HuggingFaceFetcher,
@@ -42,6 +43,7 @@ from .fetchers import (
     SemanticScholarFetcher,
     StackOverflowFetcher,
     TrustMRRFetcher,
+    TwitterFetcher,
     V2EXFetcher,
     VSCodeMarketplaceFetcher,
     WeWorkRemotelyFetcher,
@@ -102,6 +104,12 @@ class TrendingMCPServer:
         self.alternativeto_fetcher = AlternativeToFetcher(cache=self.cache)
         self.replicate_fetcher = ReplicateFetcher(cache=self.cache)
         self.betalist_fetcher = BetalistFetcher(cache=self.cache)
+
+        # Twitter/X fetcher (via Nitter)
+        self.twitter_fetcher = TwitterFetcher(cache=self.cache)
+
+        # Gumroad fetcher
+        self.gumroad_fetcher = GumroadFetcher(cache=self.cache)
 
         # Research paper fetchers with longer cache TTL (papers update slowly)
         # All paper platforms: 24 hours cache - papers and citations update slowly
@@ -1649,6 +1657,262 @@ class TrendingMCPServer:
                         "required": ["topic"],
                     },
                 ),
+                # Twitter/X Tools (via Nitter)
+                Tool(
+                    name="get_twitter_hashtag_tweets",
+                    description="Get tweets by hashtag from Twitter/X. Use this to find tweets about specific topics like #buildinpublic, #indiehackers, #saas, #startup, #webdev, #ai, etc.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "hashtag": {
+                                "type": "string",
+                                "description": "Hashtag to search (without #). Examples: 'buildinpublic', 'indiehackers', 'saas', 'startup', 'webdev', 'javascript', 'python', 'ai', 'opensource'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["hashtag"],
+                    },
+                ),
+                Tool(
+                    name="get_twitter_user_tweets",
+                    description="Get tweets from a specific Twitter/X user. Use this to see what a specific person is tweeting about.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Twitter username (without @). Examples: 'levelsio', 'elonmusk', 'naval'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
+                Tool(
+                    name="get_twitter_tech_tweets",
+                    description="Get trending tech tweets aggregated from popular hashtags (#buildinpublic, #indiehackers, #saas, #startup, #webdev). Use this for a quick overview of what's trending in tech Twitter.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 30,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Total number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_twitter_indie_hackers",
+                    description="Get tweets from popular indie hackers and tech influencers (levelsio, marc_louvion, dannypostmaa, taborsky_, etc.). Use this to see what successful indie hackers are sharing.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of tweets to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_twitter_user_profile",
+                    description="Get a Twitter/X user's profile information including bio, follower count, and stats.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Twitter username (without @).",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
+                # Gumroad Tools
+                Tool(
+                    name="get_gumroad_discover",
+                    description="Get trending/featured products from Gumroad discover page. Use this to find popular digital products being sold by creators.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "enum": [
+                                    "programming",
+                                    "design",
+                                    "software",
+                                    "business",
+                                    "education",
+                                    "writing",
+                                    "music",
+                                    "films",
+                                    "games",
+                                    "3d",
+                                    "audio",
+                                    "photography",
+                                    "fitness-and-health",
+                                    "self-improvement",
+                                ],
+                                "description": "Product category to filter. Leave empty for all categories.",
+                            },
+                            "sort": {
+                                "type": "string",
+                                "enum": ["featured", "newest", "popular"],
+                                "default": "featured",
+                                "description": "Sort order: 'featured' for curated picks, 'newest' for latest, 'popular' for most popular.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_programming",
+                    description="Get programming-related products from Gumroad (code, tutorials, courses, ebooks). Perfect for developers looking for resources.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_design",
+                    description="Get design-related products from Gumroad (templates, assets, UI kits, courses). Great for designers and product makers.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
+                Tool(
+                    name="search_gumroad",
+                    description="Search for products on Gumroad by keyword. Find specific types of digital products.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query. Examples: 'notion templates', 'figma ui kit', 'python course', 'startup guide'.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                Tool(
+                    name="get_gumroad_creator",
+                    description="Get products from a specific Gumroad creator. See what a creator is selling.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "username": {
+                                "type": "string",
+                                "description": "Creator's Gumroad username.",
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "default": 20,
+                                "minimum": 1,
+                                "maximum": 50,
+                                "description": "Number of products to fetch.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["username"],
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -2181,6 +2445,84 @@ class TrendingMCPServer:
                     response = await self.betalist_fetcher.fetch_by_topic(
                         topic=arguments.get("topic", ""),
                         limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Twitter/X Tools
+                elif name == "get_twitter_hashtag_tweets":
+                    response = await self.twitter_fetcher.fetch_hashtag_tweets(
+                        hashtag=arguments.get("hashtag", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_user_tweets":
+                    response = await self.twitter_fetcher.fetch_user_tweets(
+                        username=arguments.get("username", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_tech_tweets":
+                    response = await self.twitter_fetcher.fetch_tech_tweets(
+                        limit=arguments.get("limit", 30),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_indie_hackers":
+                    response = await self.twitter_fetcher.fetch_indie_hackers_tweets(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_twitter_user_profile":
+                    response = await self.twitter_fetcher.fetch_user_profile(
+                        username=arguments.get("username", ""),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Gumroad Tools
+                elif name == "get_gumroad_discover":
+                    response = await self.gumroad_fetcher.fetch_discover_products(
+                        category=arguments.get("category"),
+                        sort=arguments.get("sort", "featured"),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_programming":
+                    response = await self.gumroad_fetcher.fetch_programming_products(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_design":
+                    response = await self.gumroad_fetcher.fetch_design_products(
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "search_gumroad":
+                    response = await self.gumroad_fetcher.search_products(
+                        query=arguments.get("query", ""),
+                        limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_gumroad_creator":
+                    response = await self.gumroad_fetcher.fetch_creator_products(
+                        creator_username=arguments.get("username", ""),
+                        limit=arguments.get("limit", 20),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]
