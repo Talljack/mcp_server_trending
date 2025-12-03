@@ -1,0 +1,376 @@
+---
+description: MCP Server Trending 开发规范 - 新功能开发流程
+globs:
+  - "**/*.py"
+  - "tests/**"
+  - "src/**"
+alwaysApply: false
+---
+
+# MCP Server Trending 开发规范
+
+## 1. 开发前准备（必须执行）
+
+在开始任何新功能开发之前，**必须**执行以下步骤：
+
+### 1.1 切换到 main 分支并更新
+
+```bash
+# 切换到 main 分支
+git checkout main
+
+# 拉取最新的 main 分支代码
+git pull origin main
+```
+
+### 1.2 基于用户意图创建新分支
+
+根据用户的开发需求，创建语义化的分支名称：
+
+```bash
+# 分支命名规范
+# - feat/xxx: 新功能
+# - fix/xxx: Bug 修复
+# - docs/xxx: 文档更新
+# - refactor/xxx: 代码重构
+# - test/xxx: 测试相关
+
+git checkout -b feat/add-xxx-fetcher  # 示例：添加新的 fetcher
+git checkout -b fix/xxx-serialization  # 示例：修复序列化问题
+git checkout -b docs/update-readme     # 示例：更新文档
+```
+
+## 2. 新 Fetcher 开发规范
+
+### 2.1 目录结构
+
+新的 fetcher 必须遵循以下目录结构：
+
+```
+src/mcp_server_trending/
+├── fetchers/
+│   └── {platform_name}/        # 新平台目录
+│       ├── __init__.py         # 导出 Fetcher 类
+│       └── fetcher.py          # Fetcher 实现
+└── models/
+    └── {platform_name}.py      # 数据模型定义
+```
+
+### 2.2 Model 定义规范
+
+所有数据模型必须继承自 `BaseModel`：
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+
+from .base import BaseModel
+
+
+@dataclass
+class YourModel(BaseModel):
+    """数据模型描述"""
+    
+    rank: int
+    id: str
+    name: str
+    url: str
+    # ... 其他字段
+    
+    # 可选字段使用默认值
+    description: str | None = None
+    created_at: datetime | None = None
+    tags: list[str] = field(default_factory=list)
+```
+
+### 2.3 Fetcher 实现规范
+
+```python
+from typing import Any
+
+from ..base import BaseFetcher
+from ...models.base import TrendingResponse
+from ...models.{platform} import YourModel
+
+
+class YourFetcher(BaseFetcher):
+    """Fetcher 描述"""
+    
+    PLATFORM = "{platform_name}"
+    BASE_URL = "https://api.example.com"
+    
+    async def fetch_xxx(
+        self,
+        limit: int = 20,
+        use_cache: bool = True,
+    ) -> TrendingResponse:
+        """获取数据的方法描述"""
+        
+        cache_key = f"{self.PLATFORM}:xxx:limit={limit}"
+        
+        # 检查缓存
+        if use_cache:
+            cached = self._get_from_cache(cache_key)
+            if cached:
+                return cached
+        
+        try:
+            # 实现数据获取逻辑
+            items = []
+            # ... 获取和解析数据
+            
+            response = TrendingResponse(
+                success=True,
+                platform=self.PLATFORM,
+                data=items,
+                metadata={"limit": limit},
+            )
+            
+            # 保存到缓存
+            self._save_to_cache(cache_key, response)
+            return response
+            
+        except Exception as e:
+            return TrendingResponse(
+                success=False,
+                platform=self.PLATFORM,
+                error=str(e),
+            )
+```
+
+### 2.4 在 server.py 中注册
+
+1. 导入 Fetcher：
+```python
+from .fetchers.{platform} import YourFetcher
+```
+
+2. 初始化 Fetcher：
+```python
+self.your_fetcher = YourFetcher(cache=self.cache)
+```
+
+3. 注册工具：
+```python
+types.Tool(
+    name="get_{platform}_xxx",
+    description="工具描述",
+    inputSchema={
+        "type": "object",
+        "properties": {
+            "limit": {
+                "type": "integer",
+                "description": "返回数量",
+                "default": 20,
+            },
+            "use_cache": {
+                "type": "boolean",
+                "description": "是否使用缓存",
+                "default": True,
+            },
+        },
+    },
+),
+```
+
+4. 实现 `call_tool` 处理：
+```python
+elif name == "get_{platform}_xxx":
+    response = await self.your_fetcher.fetch_xxx(
+        limit=arguments.get("limit", 20),
+        use_cache=arguments.get("use_cache", True),
+    )
+```
+
+## 3. 测试文件规范（必须编写）
+
+### 3.1 测试文件位置
+
+测试文件放在 `tests/` 目录下，命名为 `test_{platform}.py`
+
+### 3.2 测试文件模板
+
+```python
+"""Tests for {Platform} fetcher."""
+
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from mcp_server_trending.fetchers.{platform} import YourFetcher
+from mcp_server_trending.utils import SimpleCache, setup_logger
+
+
+async def test_{platform}_basic():
+    """Test basic fetching functionality."""
+    print("=" * 60)
+    print("Testing {Platform} Basic Fetch")
+    print("=" * 60)
+
+    cache = SimpleCache()
+    fetcher = YourFetcher(cache=cache)
+
+    # Test 1: Basic fetch
+    print("\nTest 1: Basic fetch")
+    print("-" * 60)
+
+    response = await fetcher.fetch_xxx(
+        limit=10,
+        use_cache=False,
+    )
+
+    if response.success:
+        print(f"   ✓ Success: Fetched {len(response.data)} items")
+        print(f"   ✓ Platform: {response.platform}")
+        print(f"   ✓ Metadata: {response.metadata}")
+
+        # 展示前 3 个结果
+        for item in response.data[:3]:
+            d = item.to_dict()
+            print(f"\n   {d['rank']}. {d['name']}")
+            # ... 其他字段
+    else:
+        print(f"   ✗ Failed: {response.error}")
+
+
+async def test_{platform}_json_serialization():
+    """Test JSON serialization."""
+    print("\n" + "=" * 60)
+    print("Test: JSON serialization")
+    print("-" * 60)
+
+    cache = SimpleCache()
+    fetcher = YourFetcher(cache=cache)
+    
+    response = await fetcher.fetch_xxx(limit=5, use_cache=False)
+
+    try:
+        response_dict = response.to_dict()
+        json_str = json.dumps(response_dict, indent=2, ensure_ascii=False)
+        print(f"   ✓ JSON serialization successful")
+        print(f"   ✓ JSON length: {len(json_str)} characters")
+    except Exception as e:
+        print(f"   ✗ JSON serialization failed: {e}")
+
+
+async def test_{platform}_caching():
+    """Test caching mechanism."""
+    print("\n" + "=" * 60)
+    print("Test: Caching mechanism")
+    print("-" * 60)
+
+    cache = SimpleCache()
+    fetcher = YourFetcher(cache=cache)
+
+    response1 = await fetcher.fetch_xxx(limit=5, use_cache=True)
+    print(f"   ✓ First fetch: {len(response1.data)} items, cache_hit={response1.cache_hit}")
+
+    response2 = await fetcher.fetch_xxx(limit=5, use_cache=True)
+    print(f"   ✓ Second fetch: {len(response2.data)} items, cache_hit={response2.cache_hit}")
+
+    if response2.cache_hit:
+        print("   ✓ Caching works correctly!")
+    else:
+        print("   ⚠ Cache may not be working as expected")
+
+
+async def main():
+    """Run all {Platform} tests."""
+    setup_logger()
+
+    await test_{platform}_basic()
+    await test_{platform}_json_serialization()
+    await test_{platform}_caching()
+
+    print("\n" + "=" * 80)
+    print("✅ ALL {PLATFORM} TESTS COMPLETED!")
+    print("=" * 80)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### 3.3 运行测试
+
+```bash
+# 运行单个测试文件
+uv run python tests/test_{platform}.py
+
+# 或使用 pytest
+uv run pytest tests/test_{platform}.py -v
+```
+
+## 4. 开发完成后检查清单
+
+在提交代码之前，确保完成以下检查：
+
+- [ ] 代码符合项目规范
+- [ ] 数据模型继承自 `BaseModel`
+- [ ] Fetcher 继承自 `BaseFetcher`
+- [ ] 在 `models/__init__.py` 中导出新模型
+- [ ] 在 `fetchers/__init__.py` 中导出新 Fetcher
+- [ ] 在 `server.py` 中注册新工具
+- [ ] 编写测试文件 `tests/test_{platform}.py`
+- [ ] 测试文件包含：基础功能测试、JSON 序列化测试、缓存测试
+- [ ] 运行测试确保通过
+- [ ] 更新 README.md 文档（如需要）
+
+## 5. 提交代码
+
+```bash
+# 添加所有更改
+git add .
+
+# 提交（使用语义化提交信息）
+git commit -m "feat: add {platform} fetcher with {n} tools"
+
+# 推送到远程
+git push origin feat/add-xxx-fetcher
+
+# 创建 PR（如果需要）
+gh pr create --title "feat: Add {Platform} support" --body "..."
+```
+
+## 6. 常见问题
+
+### 6.1 JSON 序列化错误
+
+如果遇到 `is not JSON serializable` 错误：
+- 确保数据模型继承自 `BaseModel`
+- 检查 `TrendingResponse.to_dict()` 是否正确处理了你的模型
+
+### 6.2 缓存不生效
+
+- 确保 `cache_key` 包含所有影响结果的参数
+- 检查 `use_cache` 参数是否正确传递
+
+### 6.3 网络请求失败
+
+- 使用 `try-except` 包裹网络请求
+- 实现重试机制（参考 `TwitterFetcher`）
+- 返回包含错误信息的 `TrendingResponse`
+
+## 7. 参考实现
+
+- **Twitter/X Fetcher**: `src/mcp_server_trending/fetchers/twitter/fetcher.py` - 多实例降级、重试机制
+- **Gumroad Fetcher**: `src/mcp_server_trending/fetchers/gumroad/fetcher.py` - Web 爬虫实现
+- **GitHub Fetcher**: `src/mcp_server_trending/fetchers/github/fetcher.py` - 标准 API 调用
+
+## 8. 版本发布
+
+当功能合并到 main 后，如需发布新版本：
+
+```bash
+# 更新 pyproject.toml 版本号
+# 创建 tag
+git tag v0.1.x
+
+# 推送 tag 触发 GitHub Actions 自动发布
+git push origin v0.1.x
+```
