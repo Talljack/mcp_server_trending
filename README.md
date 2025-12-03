@@ -4,6 +4,7 @@
 
 **🎯 一站式独立开发者热门榜单聚合服务**
 
+[![smithery badge](https://smithery.ai/badge/@Talljack/mcp_server_trending)](https://smithery.ai/server/@Talljack/mcp_server_trending)
 [![CI](https://github.com/Talljack/mcp_server_trending/workflows/CI/badge.svg)](https://github.com/Talljack/mcp_server_trending/actions)
 [![Python Version](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP](https://img.shields.io/badge/MCP-1.0+-green.svg)](https://modelcontextprotocol.io/)
