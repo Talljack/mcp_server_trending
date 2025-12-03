@@ -19,6 +19,7 @@ from .fetchers import (
     BetalistFetcher,
     ChromeWebStoreFetcher,
     CodePenFetcher,
+    CrossPlatformFetcher,
     DevToFetcher,
     EchoJSFetcher,
     GitHubTrendingFetcher,
@@ -134,6 +135,29 @@ class TrendingMCPServer:
             hackernews=self.hackernews_fetcher,
             devto=self.devto_fetcher,
             juejin=self.juejin_fetcher,
+        )
+
+        # Initialize cross-platform fetcher with references to all searchable fetchers
+        self.cross_platform_fetcher = CrossPlatformFetcher(
+            cache=self.cache,
+            github=self.github_fetcher,
+            hackernews=self.hackernews_fetcher,
+            producthunt=self.producthunt_fetcher,
+            devto=self.devto_fetcher,
+            lobsters=self.lobsters_fetcher,
+            echojs=self.echojs_fetcher,
+            juejin=self.juejin_fetcher,
+            v2ex=self.v2ex_fetcher,
+            huggingface=self.huggingface_fetcher,
+            paperswithcode=self.paperswithcode_fetcher,
+            arxiv=self.arxiv_fetcher,
+            betalist=self.betalist_fetcher,
+            replicate=self.replicate_fetcher,
+            npm=self.npm_fetcher,
+            pypi=self.pypi_fetcher,
+            vscode=self.vscode_fetcher,
+            gumroad=self.gumroad_fetcher,
+            indiehackers=self.indiehackers_fetcher,
         )
 
         # Register handlers
@@ -1913,6 +1937,64 @@ class TrendingMCPServer:
                         "required": ["username"],
                     },
                 ),
+                # Cross-Platform Tools
+                Tool(
+                    name="search_trending_all",
+                    description="Search across multiple platforms for trending content. Aggregates results from GitHub, Hacker News, Product Hunt, dev.to, Lobsters, HuggingFace, Papers with Code, and more. Use this when user wants to find content about a specific topic across all platforms.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "Search query. Examples: 'ai agents', 'nextjs', 'rust', 'machine learning', 'web3', 'serverless'.",
+                            },
+                            "platforms": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Optional list of platforms to search. Available: 'github', 'hackernews', 'producthunt', 'devto', 'lobsters', 'echojs', 'juejin', 'v2ex', 'huggingface', 'paperswithcode', 'arxiv', 'betalist', 'replicate', 'npm', 'pypi', 'vscode', 'gumroad'. Leave empty to search all.",
+                            },
+                            "limit_per_platform": {
+                                "type": "integer",
+                                "default": 10,
+                                "minimum": 1,
+                                "maximum": 20,
+                                "description": "Maximum results per platform.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                        "required": ["query"],
+                    },
+                ),
+                Tool(
+                    name="get_trending_summary",
+                    description="Get today's trending summary across all platforms. Provides a comprehensive overview of what's hot on GitHub, Hacker News, Product Hunt, dev.to, HuggingFace, and more. Use this when user asks 'what's trending today?' or wants a daily digest.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "platforms": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Optional list of platforms to include. Available: 'github', 'hackernews', 'producthunt', 'devto', 'lobsters', 'huggingface', 'paperswithcode', 'betalist', 'indiehackers', 'v2ex', 'juejin'. Leave empty for all.",
+                            },
+                            "items_per_platform": {
+                                "type": "integer",
+                                "default": 5,
+                                "minimum": 1,
+                                "maximum": 10,
+                                "description": "Number of top items to show per platform.",
+                            },
+                            "use_cache": {
+                                "type": "boolean",
+                                "default": True,
+                                "description": "Whether to use cached data.",
+                            },
+                        },
+                    },
+                ),
             ]
 
         @self.server.call_tool()
@@ -2523,6 +2605,28 @@ class TrendingMCPServer:
                     response = await self.gumroad_fetcher.fetch_creator_products(
                         creator_username=arguments.get("username", ""),
                         limit=arguments.get("limit", 20),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                # Cross-Platform Tools
+                elif name == "search_trending_all":
+                    query = arguments.get("query")
+                    if not query:
+                        raise ValueError("query parameter is required")
+
+                    response = await self.cross_platform_fetcher.search_all_platforms(
+                        query=query,
+                        platforms=arguments.get("platforms"),
+                        limit_per_platform=arguments.get("limit_per_platform", 10),
+                        use_cache=arguments.get("use_cache", True),
+                    )
+                    return [TextContent(type="text", text=self._format_response(response))]
+
+                elif name == "get_trending_summary":
+                    response = await self.cross_platform_fetcher.get_trending_summary(
+                        platforms=arguments.get("platforms"),
+                        items_per_platform=arguments.get("items_per_platform", 5),
                         use_cache=arguments.get("use_cache", True),
                     )
                     return [TextContent(type="text", text=self._format_response(response))]

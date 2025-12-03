@@ -9,6 +9,7 @@ from .base import BaseFetcher
 from .betalist import BetalistFetcher
 from .chrome import ChromeWebStoreFetcher
 from .codepen import CodePenFetcher
+from .cross_platform import CrossPlatformFetcher
 from .devto import DevToFetcher
 from .echojs import EchoJSFetcher
 from .github import GitHubTrendingFetcher
@@ -78,4 +79,5 @@ __all__ = [
     "BetalistFetcher",
     "TwitterFetcher",
     "GumroadFetcher",
+    "CrossPlatformFetcher",
 ]

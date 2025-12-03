@@ -71,13 +71,13 @@ from .base import BaseModel
 @dataclass
 class YourModel(BaseModel):
     """数据模型描述"""
-    
+
     rank: int
     id: str
     name: str
     url: str
     # ... 其他字段
-    
+
     # 可选字段使用默认值
     description: str | None = None
     created_at: datetime | None = None
@@ -96,41 +96,41 @@ from ...models.{platform} import YourModel
 
 class YourFetcher(BaseFetcher):
     """Fetcher 描述"""
-    
+
     PLATFORM = "{platform_name}"
     BASE_URL = "https://api.example.com"
-    
+
     async def fetch_xxx(
         self,
         limit: int = 20,
         use_cache: bool = True,
     ) -> TrendingResponse:
         """获取数据的方法描述"""
-        
+
         cache_key = f"{self.PLATFORM}:xxx:limit={limit}"
-        
+
         # 检查缓存
         if use_cache:
             cached = self._get_from_cache(cache_key)
             if cached:
                 return cached
-        
+
         try:
             # 实现数据获取逻辑
             items = []
             # ... 获取和解析数据
-            
+
             response = TrendingResponse(
                 success=True,
                 platform=self.PLATFORM,
                 data=items,
                 metadata={"limit": limit},
             )
-            
+
             # 保存到缓存
             self._save_to_cache(cache_key, response)
             return response
-            
+
         except Exception as e:
             return TrendingResponse(
                 success=False,
@@ -246,7 +246,7 @@ async def test_{platform}_json_serialization():
 
     cache = SimpleCache()
     fetcher = YourFetcher(cache=cache)
-    
+
     response = await fetcher.fetch_xxx(limit=5, use_cache=False)
 
     try:

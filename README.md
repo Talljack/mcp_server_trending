@@ -249,7 +249,7 @@ bash install.sh
 > 💡 **提示**：虽然不支持 Smithery 托管，但我们提供了详细的安装文档和配置示例，安装过程同样简单！
 
 **功能列表**：
-- ✅ 55+ MCP 工具
+- ✅ 57+ MCP 工具
 - ✅ 支持 27+ 平台（GitHub、Hacker News、Product Hunt、Twitter/X、Gumroad、Papers with Code 等）
 - ✅ 跨平台聚合分析
 - ✅ 智能缓存机制
@@ -849,6 +849,20 @@ WordPress 有哪些热门的 SEO 插件？
 追踪一下 AI Agents 这个话题在各个平台的热度
 ```
 
+**跨平台搜索示例（NEW 🌐）：**
+
+```
+在所有平台搜索关于 "AI agents" 的热门内容
+```
+
+```
+今天有什么热门的技术内容？给我一个摘要
+```
+
+```
+帮我在 GitHub、Hacker News 和 dev.to 上搜索 "rust" 相关内容
+```
+
 ---
 
 ## 🎯 功能特性
@@ -905,7 +919,7 @@ WordPress 有哪些热门的 SEO 插件？
 >   - ⚠️ Nitter 实例可能不稳定，代码已实现多实例自动切换
 >   - 支持按标签、用户、聚合技术推文等多种查询方式
 
-### 可用工具 (55个)
+### 可用工具 (57个)
 
 **GitHub** (2个)
 - `get_github_trending_repos` - 获取 GitHub trending 仓库
@@ -1024,6 +1038,10 @@ WordPress 有哪些热门的 SEO 插件？
 - `analyze_tech_stack` - 跨平台技术栈分析（GitHub + npm + PyPI + Stack Overflow + VS Code + Jobs）
 - `get_indie_revenue_dashboard` - 独立开发者收入仪表板（Indie Hackers + TrustMRR）
 - `track_topic_trends` - 话题趋势追踪（Hacker News + GitHub + Stack Overflow + dev.to + Juejin）
+
+**Cross-Platform Search** (2个) 🌐 **NEW**
+- `search_trending_all` - 跨平台搜索（在 GitHub、Hacker News、Product Hunt、dev.to、Lobsters、HuggingFace 等 15+ 平台中搜索）
+- `get_trending_summary` - 今日热门摘要（汇总各平台 Top 内容，生成每日 Digest）
 
 ---
 
