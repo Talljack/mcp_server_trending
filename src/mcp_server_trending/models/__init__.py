@@ -2,6 +2,12 @@
 
 from .aitools import AITool
 from .alternativeto import AlternativeToApp
+from .cross_platform import (
+    CrossPlatformSearchResult,
+    PlatformSummaryItem,
+    SearchResultItem,
+    TrendingSummary,
+)
 from .arxiv import ArxivPaper, ArxivQuery
 from .awesome import AwesomeList, AwesomeParams
 from .base import BaseModel, TrendingResponse
@@ -93,4 +99,8 @@ __all__ = [
     "TwitterUser",
     "GumroadProduct",
     "GumroadCreator",
+    "CrossPlatformSearchResult",
+    "PlatformSummaryItem",
+    "SearchResultItem",
+    "TrendingSummary",
 ]
